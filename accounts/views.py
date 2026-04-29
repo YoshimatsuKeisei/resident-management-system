@@ -10,3 +10,12 @@ def top(request):
     template_name = "accounts/top.html"
 
     return render(request, template_name)
+
+
+def signup(request):
+    """新規登録ページを表示します。"""
+    # requestは、ブラウザから送られてきたアクセス情報を表す変数です。
+    # template_nameは、表示するHTMLテンプレートの場所を表す変数です。
+    template_name = "accounts/signup.html"
+
+    return render(request, template_name)

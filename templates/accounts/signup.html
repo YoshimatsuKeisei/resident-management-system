@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>入居者管理システム</title>
+    <title>新規登録 | 入居者管理システム</title>
+    <script src="https://yubinbango.github.io/yubinbango/yubinbango.js" charset="UTF-8"></script
     <style>
         body {
             margin: 0;
@@ -15,9 +16,9 @@
             font-family: Arial, sans-serif;
         }
 
-        .login-card {
+        .signup-card {
             width: 100%;
-            max-width: 400px;
+            max-width: 440px;
             padding: 32px;
             background-color: #ffffff;
             border-radius: 8px;
@@ -30,7 +31,7 @@
             font-size: 28px;
         }
 
-        .login-title {
+        .signup-title {
             margin: 0 0 20px;
             text-align: center;
             font-size: 20px;
@@ -66,41 +67,41 @@
             font-weight: bold;
             cursor: pointer;
         }
-
-        .signup-link {
-            margin: 20px 0 0;
-            text-align: center;
-        }
-
-        .signup-link a {
-            color: #2563eb;
-            text-decoration: none;
-        }
     </style>
 </head>
 <body>
-    <main class="login-card">
+    <main class="signup-card">
         <h1 class="site-title">入居者管理システム</h1>
 
-        <h2 class="login-title">ログイン</h2>
+        <h2 class="signup-title">新規登録</h2>
 
         <form action="#">
             <div class="form-group">
-                <label for="login-id">メールアドレスまたは電話番号</label>
-                <input type="text" id="login-id" name="login_id" placeholder="メールアドレスまたは電話番号">
+                <label for="tenant-name">入居者名</label>
+                <input type="text" id="tenant-name" name="tenant_name" placeholder="例）山田 太郎">
             </div>
 
             <div class="form-group">
-                <label for="password">パスワード</label>
-                <input type="password" id="password" name="password" placeholder="パスワードを入力">
+                <label for="email">メールアドレス</label>
+                <input type="email" id="email" name="email" placeholder="例）example@example.com">
             </div>
 
-            <button type="button">ログイン</button>
-        </form>
+            <div class="form-group">
+                <label for="phone-number">電話番号</label>
+                <input type="tel" id="phone-number" name="phone_number" placeholder="例）09012345678">
+            </div>
+            <div class="form-group">
+                <label for="address">現住所</label>
+                <input type="text" id="address" name="address" placeholder="例）東京都新宿区〇〇1-2-3">
+            </div>
 
-        <p class="signup-link">
-            <a href="/signup/">未登録の方はこちら</a>
-        </p>
+            <div class="form-group">
+                <label for="birth-date">生年月日</label>
+                <input type="text" id="birth-date" name="birth_date" placeholder="例）2000-01-01">
+            </div>
+
+            <button type="button">登録</button>
+        </form>
     </main>
 </body>
 </html>

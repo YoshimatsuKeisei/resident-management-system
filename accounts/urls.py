@@ -11,4 +11,6 @@ app_name = "accounts"
 urlpatterns = [
     # 空文字のURLは、プロジェクト側でつながれたトップページ「/」を表します。
     path("", views.top, name="top"),
+    # signup/は、新規登録ページを表示するURLです。
+    path("signup/", views.signup, name="signup"),
 ]
