@@ -1,285 +1,392 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>新規登録 | 入居者管理システム</title>
     <style>
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f3f5f7;
-        font-family: Arial, sans-serif;
-      }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f3f5f7;
+            font-family: Arial, sans-serif;
+        }
 
-      .signup-card {
-        width: 100%;
-        max-width: 440px;
-        padding: 32px;
-        background-color: #ffffff;
-        border-radius: 8px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-      }
+        .signup-card {
+            width: 100%;
+            max-width: 440px;
+            padding: 32px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
 
-      .site-title {
-        margin: 0 0 24px;
-        text-align: center;
-        font-size: 28px;
-      }
+        .site-title {
+            margin: 0 0 24px;
+            text-align: center;
+            font-size: 28px;
+        }
 
-      .signup-title {
-        margin: 0 0 20px;
-        text-align: center;
-        font-size: 20px;
-      }
+        .signup-title {
+            margin: 0 0 20px;
+            text-align: center;
+            font-size: 20px;
+        }
 
-      .form-group {
-        margin-bottom: 16px;
-      }
+        .form-group {
+            margin-bottom: 16px;
+        }
 
-      label {
-        display: block;
-        margin-bottom: 6px;
-        font-weight: bold;
-      }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
 
-      input {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 10px;
-        border: 1px solid #cfd6dd;
-        border-radius: 4px;
-        font-size: 16px;
-      }
+        input,
+        select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid #cfd6dd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
 
-      button {
-        width: 100%;
-        padding: 12px;
-        border: none;
-        border-radius: 4px;
-        background-color: #2563eb;
-        color: #ffffff;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-      }
+        input.error,
+        select.error {
+            border-color: #dc2626;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            background-color: #2563eb;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .field-error {
+            margin-left: 8px;
+            color: #dc2626;
+            font-size: 13px;
+            font-weight: normal;
+        }
+
+        .error-message {
+            margin: 0 0 16px;
+            color: #dc2626;
+            font-size: 14px;
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
     <main class="signup-card">
-      <h1 class="site-title">入居者管理システム</h1>
+        <h1 class="site-title">入居者管理システム</h1>
 
-      <h2 class="signup-title">新規登録</h2>
+        <h2 class="signup-title">新規登録</h2>
 
-      <form action="#">
-        <div class="form-group">
-          <label for="tenant-name">入居者名</label>
-          <input
-            type="text"
-            id="tenant-name"
-            name="tenant_name"
-            placeholder="例）山田 太郎"
-          />
-        </div>
+        <form action="#">
+            <div class="form-group">
+                <label for="tenant-name">入居者名<span id="tenant-name-error" class="field-error"></span></label>
+                <input type="text" id="tenant-name" name="tenant_name" placeholder="例）山田 太郎">
+            </div>
 
-        <div class="form-group">
-          <label for="email">メールアドレス</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            placeholder="例）example@example.com"
-          />
-        </div>
+            <div class="form-group">
+                <label for="email">メールアドレス<span id="email-error" class="field-error"></span></label>
+                <input type="email" id="email" name="email" placeholder="例）example@example.com">
+            </div>
 
-        <div class="form-group">
-          <label for="phone-number">電話番号</label>
-          <input
-            type="tel"
-            id="phone-number"
-            name="phone_number"
-            placeholder="例）09012345678"
-          />
-        </div>
-        <div class="form-group">
-          <label for="postal-code">郵便番号</label>
-          <input
-            type="text"
-            id="postal-code"
-            name="postal_code"
-            placeholder="例）1000001"
-            maxlength="8"
-          />
-        </div>
+            <div class="form-group">
+                <label for="phone-number">電話番号<span id="phone-number-error" class="field-error"></span></label>
+                <input type="tel" id="phone-number" name="phone_number" placeholder="例）09012345678">
+            </div>
 
-        <div class="form-group">
-          <label for="prefecture">都道府県</label>
-          <select id="prefecture" name="prefecture" required>
-            <option value="">選択してください</option>
-            <option value="北海道">北海道</option>
-            <option value="青森県">青森県</option>
-            <option value="岩手県">岩手県</option>
-            <option value="宮城県">宮城県</option>
-            <option value="秋田県">秋田県</option>
-            <option value="山形県">山形県</option>
-            <option value="福島県">福島県</option>
-            <option value="茨城県">茨城県</option>
-            <option value="栃木県">栃木県</option>
-            <option value="群馬県">群馬県</option>
-            <option value="埼玉県">埼玉県</option>
-            <option value="千葉県">千葉県</option>
-            <option value="東京都">東京都</option>
-            <option value="神奈川県">神奈川県</option>
-            <option value="新潟県">新潟県</option>
-            <option value="富山県">富山県</option>
-            <option value="石川県">石川県</option>
-            <option value="福井県">福井県</option>
-            <option value="山梨県">山梨県</option>
-            <option value="長野県">長野県</option>
-            <option value="岐阜県">岐阜県</option>
-            <option value="静岡県">静岡県</option>
-            <option value="愛知県">愛知県</option>
-            <option value="三重県">三重県</option>
-            <option value="滋賀県">滋賀県</option>
-            <option value="京都府">京都府</option>
-            <option value="大阪府">大阪府</option>
-            <option value="兵庫県">兵庫県</option>
-            <option value="奈良県">奈良県</option>
-            <option value="和歌山県">和歌山県</option>
-            <option value="鳥取県">鳥取県</option>
-            <option value="島根県">島根県</option>
-            <option value="岡山県">岡山県</option>
-            <option value="広島県">広島県</option>
-            <option value="山口県">山口県</option>
-            <option value="徳島県">徳島県</option>
-            <option value="香川県">香川県</option>
-            <option value="愛媛県">愛媛県</option>
-            <option value="高知県">高知県</option>
-            <option value="福岡県">福岡県</option>
-            <option value="佐賀県">佐賀県</option>
-            <option value="長崎県">長崎県</option>
-            <option value="熊本県">熊本県</option>
-            <option value="大分県">大分県</option>
-            <option value="宮崎県">宮崎県</option>
-            <option value="鹿児島県">鹿児島県</option>
-            <option value="沖縄県">沖縄県</option>
-          </select>
-        </div>
+            <div class="form-group">
+                <label for="postal-code">郵便番号<span id="postal-code-error" class="field-error"></span></label>
+                <input type="text" id="postal-code" name="postal_code" placeholder="例）1000001" maxlength="8">
+            </div>
 
-        <div class="form-group">
-          <label for="city">市区町村</label>
-          <input
-            type="text"
-            id="city"
-            name="city"
-            placeholder="例）千代田区"
-            required
-          />
-        </div>
+            <div class="form-group">
+                <label for="prefecture">都道府県<span id="prefecture-error" class="field-error"></span></label>
+                <select id="prefecture" name="prefecture">
+                    <option value="">選択してください</option>
+                    <option value="北海道">北海道</option>
+                    <option value="青森県">青森県</option>
+                    <option value="岩手県">岩手県</option>
+                    <option value="宮城県">宮城県</option>
+                    <option value="秋田県">秋田県</option>
+                    <option value="山形県">山形県</option>
+                    <option value="福島県">福島県</option>
+                    <option value="茨城県">茨城県</option>
+                    <option value="栃木県">栃木県</option>
+                    <option value="群馬県">群馬県</option>
+                    <option value="埼玉県">埼玉県</option>
+                    <option value="千葉県">千葉県</option>
+                    <option value="東京都">東京都</option>
+                    <option value="神奈川県">神奈川県</option>
+                    <option value="新潟県">新潟県</option>
+                    <option value="富山県">富山県</option>
+                    <option value="石川県">石川県</option>
+                    <option value="福井県">福井県</option>
+                    <option value="山梨県">山梨県</option>
+                    <option value="長野県">長野県</option>
+                    <option value="岐阜県">岐阜県</option>
+                    <option value="静岡県">静岡県</option>
+                    <option value="愛知県">愛知県</option>
+                    <option value="三重県">三重県</option>
+                    <option value="滋賀県">滋賀県</option>
+                    <option value="京都府">京都府</option>
+                    <option value="大阪府">大阪府</option>
+                    <option value="兵庫県">兵庫県</option>
+                    <option value="奈良県">奈良県</option>
+                    <option value="和歌山県">和歌山県</option>
+                    <option value="鳥取県">鳥取県</option>
+                    <option value="島根県">島根県</option>
+                    <option value="岡山県">岡山県</option>
+                    <option value="広島県">広島県</option>
+                    <option value="山口県">山口県</option>
+                    <option value="徳島県">徳島県</option>
+                    <option value="香川県">香川県</option>
+                    <option value="愛媛県">愛媛県</option>
+                    <option value="高知県">高知県</option>
+                    <option value="福岡県">福岡県</option>
+                    <option value="佐賀県">佐賀県</option>
+                    <option value="長崎県">長崎県</option>
+                    <option value="熊本県">熊本県</option>
+                    <option value="大分県">大分県</option>
+                    <option value="宮崎県">宮崎県</option>
+                    <option value="鹿児島県">鹿児島県</option>
+                    <option value="沖縄県">沖縄県</option>
+                </select>
+            </div>
 
-        <div class="form-group">
-          <label for="street-address">丁目・番地</label>
-          <input
-            type="text"
-            id="street-address"
-            name="street_address"
-            placeholder="例）千代田1-1"
-            required
-          />
-        </div>
+            <div class="form-group">
+                <label for="city">市区町村<span id="city-error" class="field-error"></span></label>
+                <input type="text" id="city" name="city" placeholder="例）千代田区">
+            </div>
 
-        <div class="form-group">
-          <label for="building-name">建物名・部屋番号 任意</label>
-          <input
-            type="text"
-            id="building-name"
-            name="building_name"
-            placeholder="例）〇〇マンション101号室"
-          />
-        </div>
+            <div class="form-group">
+                <label for="street-address">町名・丁目・番地<span id="street-address-error" class="field-error"></span></label>
+                <input type="text" id="street-address" name="street_address" placeholder="例）千代田1-1">
+            </div>
 
-        <p id="postal-code-error" class="error-message"></p>
+            <div class="form-group">
+                <label for="building-name">建物名・部屋番号 任意</label>
+                <input type="text" id="building-name" name="building_name" placeholder="例）サンプルマンション101号室">
+            </div>
 
-        <div class="form-group">
-          <label for="birth-date">生年月日</label>
-          <input
-            type="text"
-            id="birth-date"
-            name="birth_date"
-            placeholder="例）2000-01-01"
-          />
-        </div>
+            <div class="form-group">
+                <label for="birth-date">生年月日<span id="birth-date-error" class="field-error"></span></label>
+                <input type="text" id="birth-date" name="birth_date" placeholder="例）2000-01-01">
+            </div>
 
-        <button type="button">登録</button>
-      </form>
+            <p id="form-error" class="error-message"></p>
+
+            <button type="button">登録</button>
+        </form>
     </main>
+
     <script>
-      // 郵便番号の入力欄を取得する
-      const postalCodeInput = document.getElementById("postal-code");
+        // requiredFieldIdsは、登録ボタンを押したときに入力必須として確認する項目のid一覧です。
+        const requiredFieldIds = [
+            "tenant-name",
+            "email",
+            "phone-number",
+            "postal-code",
+            "prefecture",
+            "city",
+            "street-address",
+            "birth-date",
+        ];
 
-      // 都道府県のセレクトボックスを取得する
-      const prefectureSelect = document.getElementById("prefecture");
+        // validationRulesは、各入力欄の形式チェックに使うメッセージと正規表現をまとめたものです。
+        const validationRules = {
+            "tenant-name": {
+                message: "氏名の形式が正しくありません",
+                pattern: /^[\p{L}\p{M}]+(?: [\p{L}\p{M}]+)?$/u,
+            },
+            email: {
+                message: "メールアドレスの形式が正しくありません",
+                pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            },
+            "phone-number": {
+                message: "電話番号の形式が正しくありません",
+                pattern: /^[0-9-]+$/,
+            },
+            "postal-code": {
+                message: "郵便番号の形式が正しくありません",
+                pattern: /^(\d{7}|\d{3}-\d{4})$/,
+            },
+            "birth-date": {
+                message: "生年月日の形式が正しくありません",
+                pattern: /^\d{4}-\d{2}-\d{2}$/,
+            },
+        };
 
-      // 市区町村の入力欄を取得する
-      const cityInput = document.getElementById("city");
-      // 町名・丁目・番地の入力欄を取得する
-      const streetAddressInput = document.getElementById("street-address");
-
-      // エラーメッセージを表示する場所を取得する
-      const errorMessage = document.getElementById("postal-code-error");
-
-      // 直前に検索した郵便番号を保存する変数
-      let lastSearchedPostalCode = "";
-
-      // 郵便番号が入力されるたびに処理を実行する
-      postalCodeInput.addEventListener("input", async function () {
-        // ハイフンと前後の空白を取り除く
-        const postalCode = postalCodeInput.value.replace("-", "").trim();
-
-        // 7桁になるまでは検索しない
-        if (postalCode.length !== 7) {
-          errorMessage.textContent = "";
-          return;
+        // getErrorElementは、入力欄に対応するエラーメッセージ表示用のspanを取得する関数です。
+        function getErrorElement(fieldId) {
+            return document.getElementById(fieldId + "-error");
         }
 
-        // 同じ郵便番号で何度も検索しない
-        if (postalCode === lastSearchedPostalCode) {
-          return;
+        // setFieldErrorは、入力欄を赤枠にして、ラベル横にエラーメッセージを表示する関数です。
+        function setFieldError(field, message) {
+            const errorElement = getErrorElement(field.id);
+
+            field.classList.add("error");
+
+            if (errorElement) {
+                errorElement.textContent = message;
+            }
         }
 
-        lastSearchedPostalCode = postalCode;
+        // clearFieldErrorは、入力欄の赤枠とラベル横のエラーメッセージを消す関数です。
+        function clearFieldError(field) {
+            const errorElement = getErrorElement(field.id);
 
-        try {
-          const response = await fetch(
-            `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${postalCode}`,
-          );
+            field.classList.remove("error");
 
-          const data = await response.json();
-
-          if (data.results === null) {
-            errorMessage.textContent = "該当する住所が見つかりませんでした。";
-            prefectureSelect.value = "";
-            cityInput.value = "";
-            return;
-          }
-
-          const result = data.results[0];
-
-          // address1：都道府県
-          prefectureSelect.value = result.address1;
-
-          // address2,address3：市区町村
-          cityInput.value = result.address2 + result.address3;
-
-          //以降の入力はユーザーに手作業でやってもらう
-          errorMessage.textContent = "";
-        } catch (error) {
-          errorMessage.textContent = "住所検索中にエラーが発生しました。";
+            if (errorElement) {
+                errorElement.textContent = "";
+            }
         }
-      });
+
+        // isPhoneNumberValidは、ハイフンを除いた電話番号が10桁か11桁か確認する関数です。
+        function isPhoneNumberValid(value) {
+            const numberOnlyValue = value.replaceAll("-", "");
+
+            return validationRules["phone-number"].pattern.test(value) && /^\d{10,11}$/.test(numberOnlyValue);
+        }
+
+        // validateFormatは、入力された値が各項目の形式に合っているか確認する関数です。
+        function validateFormat(field) {
+            const rule = validationRules[field.id];
+            const value = field.value.trim();
+
+            if (!rule || value === "") {
+                clearFieldError(field);
+                return true;
+            }
+
+            if (field.id === "phone-number" && !isPhoneNumberValid(value)) {
+                setFieldError(field, rule.message);
+                return false;
+            }
+
+            if (field.id !== "phone-number" && !rule.pattern.test(value)) {
+                setFieldError(field, rule.message);
+                return false;
+            }
+
+            clearFieldError(field);
+            return true;
+        }
+
+        // validateRequiredFieldsは、必須項目が空欄になっていないか確認する関数です。
+        function validateRequiredFields() {
+            let hasEmptyField = false;
+
+            requiredFieldIds.forEach(function (fieldId) {
+                const field = document.getElementById(fieldId);
+
+                if (field.value.trim() === "") {
+                    setFieldError(field, "必須項目です");
+                    hasEmptyField = true;
+                } else {
+                    validateFormat(field);
+                }
+            });
+
+            return !hasEmptyField;
+        }
+
+        // fetchAddressByPostalCodeは、ZipCloud APIから郵便番号に対応する住所を取得する関数です。
+        async function fetchAddressByPostalCode(postalCode) {
+            const prefectureField = document.getElementById("prefecture");
+            const cityField = document.getElementById("city");
+            const apiUrl = "https://zipcloud.ibsnet.co.jp/api/search?zipcode=" + postalCode;
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (!data.results || data.results.length === 0) {
+                    return;
+                }
+
+                const result = data.results[0];
+
+                // address1は都道府県、address2とaddress3は市区町村として画面に入れます。
+                prefectureField.value = result.address1;
+                cityField.value = result.address2 + result.address3;
+
+                clearFieldError(prefectureField);
+                clearFieldError(cityField);
+            } catch (error) {
+                console.error("住所の取得に失敗しました。", error);
+            }
+        }
+
+        // 入力中に形式チェックを行うため、対象の入力欄にinputイベントを設定します。
+        Object.keys(validationRules).forEach(function (fieldId) {
+            const field = document.getElementById(fieldId);
+
+            field.addEventListener("input", function () {
+                validateFormat(field);
+            });
+        });
+
+        // 郵便番号が7桁になった時だけ、ZipCloud APIに問い合わせます。
+        document.getElementById("postal-code").addEventListener("input", function () {
+            const postalCode = this.value.replaceAll("-", "");
+
+            if (postalCode.length === 7 && /^\d{7}$/.test(postalCode)) {
+                fetchAddressByPostalCode(postalCode);
+            }
+        });
+
+        // 入力済みになった必須項目の赤枠を外すため、必須項目にinput/changeイベントを設定します。
+        requiredFieldIds.forEach(function (fieldId) {
+            const field = document.getElementById(fieldId);
+            const eventName = field.tagName === "SELECT" ? "change" : "input";
+
+            field.addEventListener(eventName, function () {
+                const formError = document.getElementById("form-error");
+
+                if (field.value.trim() !== "") {
+                    validateFormat(field);
+                }
+
+                formError.textContent = "";
+            });
+        });
+
+        // 登録ボタンを押した時に、未入力チェックと形式チェックを行います。
+        document.querySelector("button").addEventListener("click", function () {
+            const formError = document.getElementById("form-error");
+            const isRequiredValid = validateRequiredFields();
+            const isFormatValid = Object.keys(validationRules).every(function (fieldId) {
+                const field = document.getElementById(fieldId);
+
+                return validateFormat(field);
+            });
+
+            if (!isRequiredValid) {
+                formError.textContent = "入力していない項目があります。";
+                return;
+            }
+
+            if (!isFormatValid) {
+                formError.textContent = "";
+            }
+        });
     </script>
-  </body>
+</body>
 </html>
