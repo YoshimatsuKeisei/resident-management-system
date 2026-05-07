@@ -93,7 +93,8 @@
 
         <h2 class="signup-title">新規登録</h2>
 
-        <form action="#">
+        <form action="{% url 'accounts:signup' %}" method="post">
+            {% csrf_token %}
             <div class="form-group">
                 <label for="tenant-name">入居者名<span id="tenant-name-error" class="field-error"></span></label>
                 <input type="text" id="tenant-name" name="tenant_name" placeholder="例）山田 太郎">
@@ -188,9 +189,13 @@
                 <input type="text" id="birth-date" name="birth_date" placeholder="例）2000-01-01">
             </div>
 
-            <p id="form-error" class="error-message"></p>
+            {% if success_message %}
+                <p class="success-message">{{ success_message }}</p>
+            {% endif %}
 
-            <button type="button">登録</button>
+            <p id="form-error" class="error-message">{{ error_message }}</p>
+
+            <button type="submit">登録</button>
         </form>
     </main>
 
@@ -368,12 +373,14 @@
             });
         });
 
-        // 登録ボタンを押した時に、未入力チェックと形式チェックを行います。
-        document.querySelector("button").addEventListener("click", function () {
+        // フォーム送信時に、未入力チェックと形式チェックを行います。
+        // エラーがある場合はevent.preventDefault()でPOST送信を止めます。
+        document.querySelector("form").addEventListener("submit", function (event) {
             const formError = document.getElementById("form-error");
             const isRequiredValid = validateRequiredFields();
 
             if (!isRequiredValid) {
+                event.preventDefault();
                 formError.textContent = "入力していない項目があります。";
                 return;
             }
@@ -385,6 +392,7 @@
             });
 
             if (!isFormatValid) {
+                event.preventDefault();
                 formError.textContent = "";
             }
         });
