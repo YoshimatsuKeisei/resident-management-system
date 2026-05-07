@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>入居者一覧 | 入居者管理システム</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background-color: #f3f5f7;
+            font-family: Arial, sans-serif;
+            color: #1f2937;
+        }
+
+        .page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .site-title {
+            margin: 0 0 8px;
+            font-size: 28px;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .table-area {
+            overflow-x: auto;
+            background-color: #ffffff;
+            border: 1px solid #d8dee6;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+            font-size: 14px;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #eef2f7;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .empty-message {
+            padding: 24px;
+            background-color: #ffffff;
+            border: 1px solid #d8dee6;
+            border-radius: 8px;
+            color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="page-header">
+            <h1 class="site-title">入居者管理システム</h1>
+            <h2 class="page-title">入居者一覧</h2>
+        </header>
+
+        {% comment %}
+        tenantsには、views.pyでDBから取得した入居者データの一覧が入っています。
+        データが1件以上ある場合はテーブルを表示します。
+        {% endcomment %}
+        {% if tenants %}
+            <div class="table-area">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>入居者名</th>
+                            <th>メールアドレス</th>
+                            <th>電話番号</th>
+                            <th>郵便番号</th>
+                            <th>都道府県</th>
+                            <th>市区町村</th>
+                            <th>町名・丁目・番地</th>
+                            <th>建物名・部屋番号</th>
+                            <th>生年月日</th>
+                            <th>登録日時</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% comment %}
+                        for文で、入居者データを1件ずつtenantという名前で取り出して表示します。
+                        {% endcomment %}
+                        {% for tenant in tenants %}
+                            <tr>
+                                <td>{{ tenant.tenant_name }}</td>
+                                <td>{{ tenant.email }}</td>
+                                <td>{{ tenant.phone_number }}</td>
+                                <td>{{ tenant.postal_code }}</td>
+                                <td>{{ tenant.prefecture }}</td>
+                                <td>{{ tenant.city }}</td>
+                                <td>{{ tenant.street_address }}</td>
+                                <td>{{ tenant.building_name }}</td>
+                                <td>{{ tenant.birth_date }}</td>
+                                <td>{{ tenant.created_at }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            {% comment %}
+            if文の条件に合わない場合、つまり入居者データが0件の場合はこちらを表示します。
+            {% endcomment %}
+            <p class="empty-message">登録済みの入居者はまだいません。</p>
+        {% endif %}
+    </main>
+</body>
+</html>

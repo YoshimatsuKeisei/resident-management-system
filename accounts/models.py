@@ -29,6 +29,9 @@ class TenantProfile(models.Model):
     # 生年月日を日付として保存します。
     birth_date = models.DateField()
 
+    # パスワードは平文では保存せず、Djangoでハッシュ化した文字列だけを保存します。
+    password_hash = models.CharField(max_length=128, default="")
+
     # データが作成された日時を自動で保存します。
     created_at = models.DateTimeField(auto_now_add=True)
 

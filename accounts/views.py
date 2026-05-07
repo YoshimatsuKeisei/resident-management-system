@@ -74,3 +74,16 @@ def signup(request):
         context["success_message"] = "登録が完了しました。"
 
     return render(request, template_name, context)
+
+
+def tenant_list(request):
+    """管理者用の入居者一覧ページを表示します。"""
+    # DBに保存されている入居者データを、登録日時が新しい順に取得します。
+    tenants = TenantProfile.objects.all().order_by("-created_at")
+
+    # contextに入れたデータは、HTMLテンプレート側で使えるようになります。
+    context = {
+        "tenants": tenants,
+    }
+
+    return render(request, "accounts/tenant_list.html", context)
