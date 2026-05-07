@@ -3,19 +3,43 @@
 import re
 from datetime import date
 
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password, make_password
+from django.db.models import Q
 from django.shortcuts import render
 
 from .models import TenantProfile
 
 
 def top(request):
-    """トップページを表示します。"""
+    """トップページの表示と、ログイン判定を行います。"""
     # requestは、ブラウザから送られてきたアクセス情報を表す変数です。
     # template_nameは、表示するHTMLテンプレートの場所を表す変数です。
     template_name = "accounts/top.html"
+    context = {}
 
-    return render(request, template_name)
+    if request.method == "POST":
+        # request.POSTには、ログインフォームから送られてきた入力値が入っています。
+        login_identifier = request.POST.get("login_identifier", "").strip()
+        password = request.POST.get("password", "")
+
+        # メールアドレスまたは電話番号が一致する入居者データを探します。
+        tenant = TenantProfile.objects.filter(
+            Q(email=login_identifier) | Q(phone_number=login_identifier)
+        ).first()
+
+        if tenant is None:
+            context["login_error_message"] = (
+                "まだ新規登録されていません。先に新規登録を行ってください。"
+            )
+        # check_passwordは、入力された平文パスワードとDB内のハッシュが合うか確認します。
+        elif not check_password(password, tenant.password_hash):
+            context["login_error_message"] = (
+                "メールアドレスまたは電話番号、パスワードが異なります。"
+            )
+        else:
+            context["login_success_message"] = "ログインに成功しました。"
+
+    return render(request, template_name, context)
 
 
 def signup(request):

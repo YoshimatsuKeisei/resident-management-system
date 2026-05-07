@@ -76,6 +76,19 @@
             color: #2563eb;
             text-decoration: none;
         }
+
+        .login-message {
+            margin: 0 0 16px;
+            font-size: 14px;
+        }
+
+        .login-message.error {
+            color: #dc2626;
+        }
+
+        .login-message.success {
+            color: #2563eb;
+        }
     </style>
 </head>
 <body>
@@ -84,10 +97,11 @@
 
         <h2 class="login-title">ログイン</h2>
 
-        <form action="#">
+        <form action="{% url 'accounts:top' %}" method="post">
+            {% csrf_token %}
             <div class="form-group">
                 <label for="login-id">メールアドレスまたは電話番号</label>
-                <input type="text" id="login-id" name="login_id" placeholder="メールアドレスまたは電話番号">
+                <input type="text" id="login-id" name="login_identifier" placeholder="メールアドレスまたは電話番号">
             </div>
 
             <div class="form-group">
@@ -95,12 +109,40 @@
                 <input type="password" id="password" name="password" placeholder="パスワードを入力">
             </div>
 
-            <button type="button">ログイン</button>
+            {% if login_error_message %}
+                <p id="login-message" class="login-message error">{{ login_error_message }}</p>
+            {% elif login_success_message %}
+                <p id="login-message" class="login-message success">{{ login_success_message }}</p>
+            {% endif %}
+
+            <button type="submit">ログイン</button>
         </form>
 
         <p class="signup-link">
-            <a href="/signup/">未登録の方はこちら</a>
+            <a href="/signup/" id="signup-link">未登録の方はこちら</a>
         </p>
     </main>
+    <script>
+        const loginMessage = document.getElementById("login-message");
+        const loginIdentifierField = document.getElementById("login-id");
+        const passwordField = document.getElementById("password");
+        const signupLink = document.getElementById("signup-link");
+
+        // clearLoginMessageは、画面に表示されているログイン結果メッセージを消す関数です。
+        function clearLoginMessage() {
+            if (loginMessage) {
+                loginMessage.textContent = "";
+            }
+        }
+
+        // 入力欄をクリック、または入力したら、古いログイン結果メッセージを消します。
+        [loginIdentifierField, passwordField].forEach(function (field) {
+            field.addEventListener("click", clearLoginMessage);
+            field.addEventListener("input", clearLoginMessage);
+        });
+
+        // 未登録リンクをクリックした時もメッセージを消します。リンク先への移動はそのまま行われます。
+        signupLink.addEventListener("click", clearLoginMessage);
+    </script>
 </body>
 </html>
