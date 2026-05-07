@@ -61,6 +61,34 @@
             border-color: #dc2626;
         }
 
+        .password-field {
+            position: relative;
+        }
+
+        .password-field input {
+            padding-right: 48px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 8px;
+            width: auto;
+            padding: 4px 8px;
+            transform: translateY(-50%);
+            border: none;
+            border-radius: 4px;
+            background-color: transparent;
+            color: #4b5563;
+            font-size: 14px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .password-toggle:hover {
+            background-color: #eef2f7;
+        }
+
         button {
             width: 100%;
             padding: 12px;
@@ -103,6 +131,22 @@
             <div class="form-group">
                 <label for="email">メールアドレス<span id="email-error" class="field-error"></span></label>
                 <input type="email" id="email" name="email" placeholder="例）example@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="password">パスワード<span id="password-error" class="field-error"></span></label>
+                <div class="password-field">
+                    <input type="password" id="password" name="password" placeholder="例）abc123">
+                    <button type="button" class="password-toggle" data-target="password" aria-label="パスワードを表示">目</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password-confirm">パスワード確認<span id="password-confirm-error" class="field-error"></span></label>
+                <div class="password-field">
+                    <input type="password" id="password-confirm" name="password_confirm" placeholder="もう一度入力してください">
+                    <button type="button" class="password-toggle" data-target="password-confirm" aria-label="パスワード確認を表示">目</button>
+                </div>
             </div>
 
             <div class="form-group">
@@ -204,6 +248,8 @@
         const requiredFieldIds = [
             "tenant-name",
             "email",
+            "password",
+            "password-confirm",
             "phone-number",
             "postal-code",
             "prefecture",
@@ -225,6 +271,14 @@
             "phone-number": {
                 message: "電話番号の形式が正しくありません",
                 pattern: /^[0-9-]+$/,
+            },
+            password: {
+                message: "形式が違います。半角英数字のみの入力です。",
+                pattern: /^[A-Za-z0-9]+$/,
+            },
+            "password-confirm": {
+                message: "形式が違います。半角英数字のみの入力です。",
+                pattern: /^[A-Za-z0-9]+$/,
             },
             "postal-code": {
                 message: "郵便番号の形式が正しくありません",
@@ -294,6 +348,30 @@
             return true;
         }
 
+        // validatePasswordFieldsは、パスワードの形式と確認欄との一致を確認する関数です。
+        function validatePasswordFields() {
+            const passwordField = document.getElementById("password");
+            const passwordConfirmField = document.getElementById("password-confirm");
+            const isPasswordFormatValid = validateFormat(passwordField);
+            const isPasswordConfirmFormatValid = validateFormat(passwordConfirmField);
+
+            if (!isPasswordFormatValid || !isPasswordConfirmFormatValid) {
+                return false;
+            }
+
+            if (passwordField.value.trim() === "" || passwordConfirmField.value.trim() === "") {
+                return true;
+            }
+
+            if (passwordField.value !== passwordConfirmField.value) {
+                setFieldError(passwordConfirmField, "パスワードが一致しません。");
+                return false;
+            }
+
+            clearFieldError(passwordConfirmField);
+            return true;
+        }
+
         // validateRequiredFieldsは、必須項目が空欄になっていないか確認する関数です。
         function validateRequiredFields() {
             let hasEmptyField = false;
@@ -304,6 +382,8 @@
                 if (field.value.trim() === "") {
                     setFieldError(field, "必須項目です");
                     hasEmptyField = true;
+                } else if (field.id === "password" || field.id === "password-confirm") {
+                    validatePasswordFields();
                 } else {
                     validateFormat(field);
                 }
@@ -344,7 +424,22 @@
             const field = document.getElementById(fieldId);
 
             field.addEventListener("input", function () {
-                validateFormat(field);
+                if (field.id === "password" || field.id === "password-confirm") {
+                    validatePasswordFields();
+                } else {
+                    validateFormat(field);
+                }
+            });
+        });
+
+        // 目のボタンを押すと、パスワード欄の表示と非表示を切り替えます。
+        document.querySelectorAll(".password-toggle").forEach(function (button) {
+            button.addEventListener("click", function () {
+                const targetField = document.getElementById(button.dataset.target);
+                const isHidden = targetField.type === "password";
+
+                targetField.type = isHidden ? "text" : "password";
+                button.textContent = isHidden ? "隠" : "目";
             });
         });
 
@@ -365,7 +460,9 @@
             field.addEventListener(eventName, function () {
                 const formError = document.getElementById("form-error");
 
-                if (field.value.trim() !== "") {
+                if (field.id === "password" || field.id === "password-confirm") {
+                    validatePasswordFields();
+                } else if (field.value.trim() !== "") {
                     validateFormat(field);
                 }
 
@@ -385,10 +482,18 @@
                 return;
             }
 
-            const isFormatValid = Object.keys(validationRules).every(function (fieldId) {
+            let isFormatValid = true;
+
+            Object.keys(validationRules).forEach(function (fieldId) {
                 const field = document.getElementById(fieldId);
 
-                return validateFormat(field);
+                if (field.id === "password" || field.id === "password-confirm") {
+                    if (!validatePasswordFields()) {
+                        isFormatValid = false;
+                    }
+                } else if (!validateFormat(field)) {
+                    isFormatValid = false;
+                }
             });
 
             if (!isFormatValid) {

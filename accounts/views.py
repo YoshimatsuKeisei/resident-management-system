@@ -1,7 +1,9 @@
 """accountsアプリで使う画面表示の処理を書きます。"""
 
+import re
 from datetime import date
 
+from django.contrib.auth.hashers import make_password
 from django.shortcuts import render
 
 from .models import TenantProfile
@@ -34,6 +36,8 @@ def signup(request):
         street_address = request.POST.get("street_address", "").strip()
         building_name = request.POST.get("building_name", "").strip()
         birth_date_text = request.POST.get("birth_date", "").strip()
+        password = request.POST.get("password", "")
+        password_confirm = request.POST.get("password_confirm", "")
 
         # building_nameは任意なので、必須チェックには含めません。
         required_values = [
@@ -45,10 +49,27 @@ def signup(request):
             city,
             street_address,
             birth_date_text,
+            password,
+            password_confirm,
         ]
 
         if any(value == "" for value in required_values):
             context["error_message"] = "入力していない項目があります。"
+            return render(request, template_name, context)
+
+        # パスワードはサーバー側でも半角英数字だけか確認します。
+        if not re.fullmatch(r"[A-Za-z0-9]+", password):
+            context["error_message"] = "パスワードの形式が違います。半角英数字のみの入力です。"
+            return render(request, template_name, context)
+
+        # 確認用パスワードも半角英数字だけか確認します。
+        if not re.fullmatch(r"[A-Za-z0-9]+", password_confirm):
+            context["error_message"] = "パスワード確認の形式が違います。半角英数字のみの入力です。"
+            return render(request, template_name, context)
+
+        # 入力したパスワードと確認用パスワードが同じか確認します。
+        if password != password_confirm:
+            context["error_message"] = "パスワードが一致しません。"
             return render(request, template_name, context)
 
         try:
@@ -69,6 +90,8 @@ def signup(request):
             street_address=street_address,
             building_name=building_name,
             birth_date=birth_date,
+            # 平文パスワードは保存せず、make_passwordで作ったハッシュだけを保存します。
+            password_hash=make_password(password),
         )
 
         context["success_message"] = "登録が完了しました。"

@@ -1,11 +1,5 @@
-#from django.contrib import admin
-
-#from .models import TenantProfile
-
-
-#admin.site.register(TenantProfile)
-
 from django.contrib import admin
+
 from .models import TenantProfile
 
 
@@ -20,5 +14,7 @@ class TenantProfileAdmin(admin.ModelAdmin):
         "birth_date",
         "created_at",
     )
+    # password_hashは管理画面で表示・編集しないようにします。
+    exclude = ("password_hash",)
     search_fields = ("tenant_name", "email", "phone_number")
     list_filter = ("prefecture", "city")
