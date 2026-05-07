@@ -15,4 +15,10 @@ urlpatterns = [
     path("signup/", views.signup, name="signup"),
     # management/tenants/は、管理者用の入居者一覧ページを表示するURLです。
     path("management/tenants/", views.tenant_list, name="tenant_list"),
+    # management/login-histories/は、管理者用のログイン履歴一覧ページを表示するURLです。
+    path(
+        "management/login-histories/",
+        views.login_history_list,
+        name="login_history_list",
+    ),
 ]

@@ -40,3 +40,43 @@ class TenantProfile(models.Model):
 
     def __str__(self):
         return self.tenant_name
+
+
+class LoginSession(models.Model):
+    # どの入居者のログイン1回分かを保存します。
+    tenant = models.ForeignKey(TenantProfile, on_delete=models.CASCADE)
+
+    # ログインセッションが作られた日時を自動で保存します。
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"LoginSession {self.id}"
+
+
+class LoginHistory(models.Model):
+    # ログインしたことを表す種別です。
+    EVENT_TYPE_IN = "IN"
+
+    # 将来ログアウトしたことを表す種別として使います。
+    EVENT_TYPE_OUT = "OUT"
+
+    # event_typeに入れられる値をINとOUTだけに制限します。
+    EVENT_TYPE_CHOICES = [
+        (EVENT_TYPE_IN, "IN"),
+        (EVENT_TYPE_OUT, "OUT"),
+    ]
+
+    # どのログインセッションに紐づく履歴かを保存します。
+    login_session = models.ForeignKey(LoginSession, on_delete=models.CASCADE)
+
+    # どの入居者の履歴かを保存します。
+    tenant = models.ForeignKey(TenantProfile, on_delete=models.CASCADE)
+
+    # ログインまたはログアウトの種別を保存します。
+    event_type = models.CharField(max_length=3, choices=EVENT_TYPE_CHOICES)
+
+    # ログインまたはログアウトが発生した日時を自動で保存します。
+    occurred_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.event_type} {self.id}"

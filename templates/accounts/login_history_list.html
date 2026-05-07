@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>入居者一覧 | 入居者管理システム</title>
+    <title>ログイン履歴一覧 | 入居者管理システム</title>
     <style>
         body {
             margin: 0;
@@ -14,7 +14,7 @@
         }
 
         .page {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 32px 24px;
         }
@@ -43,7 +43,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1000px;
+            min-width: 760px;
         }
 
         th,
@@ -78,48 +78,36 @@
     <main class="page">
         <header class="page-header">
             <h1 class="site-title">入居者管理システム</h1>
-            <h2 class="page-title">入居者一覧</h2>
+            <h2 class="page-title">ログイン履歴一覧</h2>
         </header>
 
         {% comment %}
-        tenantsには、views.pyでDBから取得した入居者データの一覧が入っています。
+        login_historiesには、views.pyでDBから取得したログイン履歴の一覧が入っています。
         データが1件以上ある場合はテーブルを表示します。
         {% endcomment %}
-        {% if tenants %}
+        {% if login_histories %}
             <div class="table-area">
                 <table>
                     <thead>
                         <tr>
+                            <th>ログ履歴ID</th>
+                            <th>ログインセッションID</th>
                             <th>入居者ID</th>
-                            <th>入居者名</th>
-                            <th>メールアドレス</th>
-                            <th>電話番号</th>
-                            <th>郵便番号</th>
-                            <th>都道府県</th>
-                            <th>市区町村</th>
-                            <th>町名・丁目・番地</th>
-                            <th>建物名・部屋番号</th>
-                            <th>生年月日</th>
-                            <th>登録日時</th>
+                            <th>日時</th>
+                            <th>ログの種類</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% comment %}
-                        for文で、入居者データを1件ずつtenantという名前で取り出して表示します。
+                        for文で、ログイン履歴を1件ずつhistoryという名前で取り出して表示します。
                         {% endcomment %}
-                        {% for tenant in tenants %}
+                        {% for history in login_histories %}
                             <tr>
-                                <td>{{ tenant.id }}</td>
-                                <td>{{ tenant.tenant_name }}</td>
-                                <td>{{ tenant.email }}</td>
-                                <td>{{ tenant.phone_number }}</td>
-                                <td>{{ tenant.postal_code }}</td>
-                                <td>{{ tenant.prefecture }}</td>
-                                <td>{{ tenant.city }}</td>
-                                <td>{{ tenant.street_address }}</td>
-                                <td>{{ tenant.building_name }}</td>
-                                <td>{{ tenant.birth_date }}</td>
-                                <td>{{ tenant.created_at }}</td>
+                                <td>{{ history.id }}</td>
+                                <td>{{ history.login_session.id }}</td>
+                                <td>{{ history.tenant.id }}</td>
+                                <td>{{ history.occurred_at|date:"Y-m-d-H:i" }}</td>
+                                <td>{{ history.event_type }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -127,9 +115,9 @@
             </div>
         {% else %}
             {% comment %}
-            if文の条件に合わない場合、つまり入居者データが0件の場合はこちらを表示します。
+            if文の条件に合わない場合、つまりログイン履歴が0件の場合はこちらを表示します。
             {% endcomment %}
-            <p class="empty-message">登録済みの入居者はまだいません。</p>
+            <p class="empty-message">ログイン履歴はまだありません。</p>
         {% endif %}
     </main>
 </body>

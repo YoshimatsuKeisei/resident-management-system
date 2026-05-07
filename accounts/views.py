@@ -7,7 +7,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import Q
 from django.shortcuts import render
 
-from .models import TenantProfile
+from .models import LoginHistory, LoginSession, TenantProfile
 
 
 def top(request):
@@ -37,6 +37,20 @@ def top(request):
                 "メールアドレスまたは電話番号、パスワードが異なります。"
             )
         else:
+            # ログイン成功1回分を表すLoginSessionを作成します。
+            login_session = LoginSession.objects.create(tenant=tenant)
+
+            # LoginSessionに紐づくINログをLoginHistoryに保存します。
+            LoginHistory.objects.create(
+                login_session=login_session,
+                tenant=tenant,
+                event_type=LoginHistory.EVENT_TYPE_IN,
+            )
+
+            # 将来ログアウト処理でOUTログを残せるように、必要なIDをセッションに保存します。
+            request.session["tenant_id"] = tenant.id
+            request.session["login_session_id"] = login_session.id
+
             context["login_success_message"] = "ログインに成功しました。"
 
     return render(request, template_name, context)
@@ -134,3 +148,16 @@ def tenant_list(request):
     }
 
     return render(request, "accounts/tenant_list.html", context)
+
+
+def login_history_list(request):
+    """管理者用のログイン履歴一覧ページを表示します。"""
+    # DBに保存されているログイン履歴を、発生日時が新しい順に取得します。
+    login_histories = LoginHistory.objects.all().order_by("-occurred_at")
+
+    # contextに入れたデータは、HTMLテンプレート側で使えるようになります。
+    context = {
+        "login_histories": login_histories,
+    }
+
+    return render(request, "accounts/login_history_list.html", context)
