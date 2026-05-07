@@ -372,16 +372,17 @@
         document.querySelector("button").addEventListener("click", function () {
             const formError = document.getElementById("form-error");
             const isRequiredValid = validateRequiredFields();
-            const isFormatValid = Object.keys(validationRules).every(function (fieldId) {
-                const field = document.getElementById(fieldId);
-
-                return validateFormat(field);
-            });
 
             if (!isRequiredValid) {
                 formError.textContent = "入力していない項目があります。";
                 return;
             }
+
+            const isFormatValid = Object.keys(validationRules).every(function (fieldId) {
+                const field = document.getElementById(fieldId);
+
+                return validateFormat(field);
+            });
 
             if (!isFormatValid) {
                 formError.textContent = "";
