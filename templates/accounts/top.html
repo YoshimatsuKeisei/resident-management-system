@@ -46,6 +46,24 @@
             font-weight: bold;
         }
 
+        .label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .label-row label {
+            margin-bottom: 0;
+        }
+
+        .field-error {
+            color: #dc2626;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
         input {
             width: 100%;
             box-sizing: border-box;
@@ -53,6 +71,10 @@
             border: 1px solid #cfd6dd;
             border-radius: 4px;
             font-size: 16px;
+        }
+
+        input.input-error {
+            border-color: #dc2626;
         }
 
         button {
@@ -67,14 +89,21 @@
             cursor: pointer;
         }
 
-        .signup-link {
-            margin: 20px 0 0;
-            text-align: center;
+        .password-reset-link {
+            margin: -8px 0 16px;
+            text-align: right;
+            font-size: 14px;
         }
 
+        .password-reset-link a,
         .signup-link a {
             color: #2563eb;
             text-decoration: none;
+        }
+
+        .signup-link {
+            margin: 20px 0 0;
+            text-align: center;
         }
 
         .login-message {
@@ -97,17 +126,27 @@
 
         <h2 class="login-title">ログイン</h2>
 
-        <form action="{% url 'accounts:top' %}" method="post">
+        <form action="{% url 'accounts:top' %}" method="post" id="login-form" novalidate>
             {% csrf_token %}
             <div class="form-group">
-                <label for="login-id">メールアドレスまたは電話番号</label>
+                <div class="label-row">
+                    <label for="login-id">メールアドレスまたは電話番号</label>
+                    <span class="field-error" id="login-id-error"></span>
+                </div>
                 <input type="text" id="login-id" name="login_identifier" placeholder="メールアドレスまたは電話番号">
             </div>
 
             <div class="form-group">
-                <label for="password">パスワード</label>
+                <div class="label-row">
+                    <label for="password">パスワード</label>
+                    <span class="field-error" id="password-error"></span>
+                </div>
                 <input type="password" id="password" name="password" placeholder="パスワードを入力">
             </div>
+
+            <p class="password-reset-link">
+                <a href="/password-reset/" id="password-reset-link">パスワードをお忘れですか？</a>
+            </p>
 
             {% if login_error_message %}
                 <p id="login-message" class="login-message error">{{ login_error_message }}</p>
@@ -123,26 +162,80 @@
         </p>
     </main>
     <script>
+        const loginForm = document.getElementById("login-form");
         const loginMessage = document.getElementById("login-message");
         const loginIdentifierField = document.getElementById("login-id");
         const passwordField = document.getElementById("password");
+        const loginIdentifierError = document.getElementById("login-id-error");
+        const passwordError = document.getElementById("password-error");
         const signupLink = document.getElementById("signup-link");
+        const passwordResetLink = document.getElementById("password-reset-link");
 
-        // clearLoginMessageは、画面に表示されているログイン結果メッセージを消す関数です。
+        // メールアドレスの形だけを確認します。登録済みかどうかは画面側では調べません。
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        // 電話番号の形だけを確認します。ハイフンあり・なしの数字を許可します。
+        const phonePattern = /^0\d{1,4}-?\d{1,4}-?\d{3,4}$/;
+
+        // パスワードは今回の仕様に合わせて、半角英数字のみ許可します。
+        const passwordPattern = /^[A-Za-z0-9]+$/;
+
         function clearLoginMessage() {
             if (loginMessage) {
                 loginMessage.textContent = "";
             }
         }
 
-        // 入力欄をクリック、または入力したら、古いログイン結果メッセージを消します。
+        function clearFieldError(field, errorElement) {
+            field.classList.remove("input-error");
+            errorElement.textContent = "";
+        }
+
+        function setFieldError(field, errorElement, message) {
+            field.classList.add("input-error");
+            errorElement.textContent = message;
+        }
+
+        // 入力中に古いエラー表示を消して、次の入力をしやすくします。
         [loginIdentifierField, passwordField].forEach(function (field) {
             field.addEventListener("click", clearLoginMessage);
-            field.addEventListener("input", clearLoginMessage);
+            field.addEventListener("input", function () {
+                clearLoginMessage();
+                if (field === loginIdentifierField) {
+                    clearFieldError(loginIdentifierField, loginIdentifierError);
+                } else {
+                    clearFieldError(passwordField, passwordError);
+                }
+            });
         });
 
-        // 未登録リンクをクリックした時もメッセージを消します。リンク先への移動はそのまま行われます。
+        loginForm.addEventListener("submit", function (event) {
+            const loginIdentifier = loginIdentifierField.value.trim();
+            const password = passwordField.value;
+            let hasError = false;
+
+            clearLoginMessage();
+            clearFieldError(loginIdentifierField, loginIdentifierError);
+            clearFieldError(passwordField, passwordError);
+
+            if (loginIdentifier !== "" && !emailPattern.test(loginIdentifier) && !phonePattern.test(loginIdentifier)) {
+                setFieldError(loginIdentifierField, loginIdentifierError, "入力形式が正しくありません。");
+                hasError = true;
+            }
+
+            if (password !== "" && !passwordPattern.test(password)) {
+                setFieldError(passwordField, passwordError, "形式が違います。半角英数字のみの入力です。");
+                hasError = true;
+            }
+
+            if (hasError) {
+                event.preventDefault();
+            }
+        });
+
+        // リンクを押す直前に、ログイン結果メッセージだけ消します。
         signupLink.addEventListener("click", clearLoginMessage);
+        passwordResetLink.addEventListener("click", clearLoginMessage);
     </script>
 </body>
 </html>

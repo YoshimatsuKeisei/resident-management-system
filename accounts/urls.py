@@ -4,15 +4,17 @@ from django.urls import path
 
 from . import views
 
-# app_nameは、URLに名前を付けるときのグループ名を表す変数です。
+# app_nameは、URLに名前を付けるときのグループ名です。
 app_name = "accounts"
 
-# urlpatternsは、accountsアプリ内のURLと処理内容の対応表を表す変数です。
+# urlpatternsは、URLと処理内容の対応表です。
 urlpatterns = [
-    # 空文字のURLは、プロジェクト側でつながれたトップページ「/」を表します。
+    # 空文字のURLは、プロジェクト側でつながれたトップページを表示します。
     path("", views.top, name="top"),
     # signup/は、新規登録ページを表示するURLです。
     path("signup/", views.signup, name="signup"),
+    # password-reset/は、パスワード変更ページを表示するURLです。
+    path("password-reset/", views.password_reset, name="password_reset"),
     # management/tenants/は、管理者用の入居者一覧ページを表示するURLです。
     path("management/tenants/", views.tenant_list, name="tenant_list"),
     # management/login-histories/は、管理者用のログイン履歴一覧ページを表示するURLです。
