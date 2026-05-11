@@ -212,6 +212,31 @@
             margin-bottom: 14px;
         }
 
+        .notice-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+        }
+
+        .trash-entry-button,
+        .trash-action-button {
+            min-height: 40px;
+            padding: 8px 12px;
+            border: 1px solid #cfd6dd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: #374151;
+            cursor: pointer;
+            font: inherit;
+            font-weight: bold;
+        }
+
+        .trash-action-button.danger {
+            border-color: #fecaca;
+            background-color: #fef2f2;
+            color: #dc2626;
+        }
+
         .notice-filter label {
             display: grid;
             gap: 6px;
@@ -263,6 +288,34 @@
             border: 1px solid #e5e7eb;
             cursor: pointer;
             text-align: left;
+        }
+
+        .notice-swipe-wrap {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .notice-trash-ribbon {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 18px;
+            background-color: #dc2626;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .notice-swipe-wrap .notice-card {
+            position: relative;
+            z-index: 1;
+            transition: transform 0.18s ease;
+        }
+
+        .notice-swipe-wrap.dragging .notice-card {
+            transition: none;
         }
 
         .notice-card:hover {
@@ -324,6 +377,14 @@
             display: block;
         }
 
+        .notice-trash-view {
+            display: none;
+        }
+
+        .notice-trash-view.active {
+            display: block;
+        }
+
         .notice-overview.is-hidden {
             display: none;
         }
@@ -349,6 +410,55 @@
             color: #6b7280;
             font-size: 14px;
             text-align: center;
+        }
+
+        .trash-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .trash-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .trash-list {
+            display: grid;
+            gap: 12px;
+            max-height: calc(100vh - 260px);
+            padding-right: 4px;
+            padding-bottom: 24px;
+            overflow-y: auto;
+        }
+
+        .trash-item {
+            display: grid;
+            grid-template-columns: 0 1fr;
+            gap: 10px;
+            align-items: stretch;
+            transition: grid-template-columns 0.18s ease;
+        }
+
+        .trash-item.selecting {
+            grid-template-columns: 34px 1fr;
+        }
+
+        .trash-check {
+            width: 22px;
+            height: 22px;
+            align-self: center;
+            justify-self: center;
+            opacity: 0;
+            transition: opacity 0.18s ease;
+        }
+
+        .trash-item.selecting .trash-check {
+            opacity: 1;
         }
 
         .unread-label {
@@ -776,6 +886,9 @@
             <h2 class="section-title">管理会社等からのお知らせ</h2>
 
             <div class="notice-overview" id="notice-overview">
+                <div class="notice-toolbar">
+                    <button type="button" class="trash-entry-button" id="notice-trash-entry-button">🗑 ゴミ箱</button>
+                </div>
                 <div class="notice-filter card" aria-label="お知らせ絞り込み">
                     <label>
                         送信元会社
@@ -839,6 +952,20 @@
                         <button type="button" class="back-button" id="notice-back-button">←</button>
                     </div>
                 </div>
+            </div>
+
+            <div class="notice-trash-view" id="notice-trash-view">
+                <div class="trash-header">
+                    <button type="button" class="back-button" id="trash-back-button">←</button>
+                    <h3 class="section-title">ゴミ箱</h3>
+                </div>
+                <div class="trash-actions">
+                    <button type="button" class="trash-action-button" id="trash-select-button">選択</button>
+                    <button type="button" class="trash-action-button danger" id="trash-delete-selected-button">🗑 ゴミ箱</button>
+                    <button type="button" class="trash-action-button danger" id="trash-delete-all-button">全て削除</button>
+                </div>
+                <p class="form-message" id="trash-message"></p>
+                <div class="trash-list" id="trash-list" aria-label="ゴミ箱内のお知らせ一覧"></div>
             </div>
         </section>
 
@@ -1133,6 +1260,14 @@
         const noticeDetailTitle = document.getElementById("notice-detail-title");
         const noticeDetailBody = document.getElementById("notice-detail-body");
         const noticeBackButton = document.getElementById("notice-back-button");
+        const noticeTrashEntryButton = document.getElementById("notice-trash-entry-button");
+        const noticeTrashView = document.getElementById("notice-trash-view");
+        const trashBackButton = document.getElementById("trash-back-button");
+        const trashSelectButton = document.getElementById("trash-select-button");
+        const trashDeleteSelectedButton = document.getElementById("trash-delete-selected-button");
+        const trashDeleteAllButton = document.getElementById("trash-delete-all-button");
+        const trashMessage = document.getElementById("trash-message");
+        const trashList = document.getElementById("trash-list");
         const noticeCompanyFilter = document.getElementById("notice-company-filter");
         const noticeStarFilter = document.getElementById("notice-star-filter");
         const noticePeriodFilter = document.getElementById("notice-period-filter");
@@ -1181,6 +1316,7 @@
         let activeDetailName = "";
         let noticeListScrollTop = 0;
         let currentNoticeDetailId = null;
+        let isTrashSelectMode = false;
 
         const notices = [
             {
@@ -1391,7 +1527,7 @@
             const filters = getNoticeFilterConditions();
 
             return notices.filter(function (notice) {
-                if (notice.isTrash) {
+                if (notice.isTrash || notice.isDeleted) {
                     return false;
                 }
 
@@ -1427,6 +1563,191 @@
             notice.isStarred = !notice.isStarred;
         }
 
+        function moveNoticeToTrash(noticeId) {
+            const notice = notices.find(function (item) {
+                return item.id === noticeId;
+            });
+
+            if (!notice) {
+                return;
+            }
+
+            // 今回は完全削除せず、JS上でisTrashをtrueにしてゴミ箱へ移動します。
+            notice.isTrash = true;
+            renderNoticeList();
+        }
+
+        function enableSwipeToTrash(wrapper, card, noticeId) {
+            let startX = 0;
+            let currentX = 0;
+            let isDragging = false;
+
+            function startDrag(clientX) {
+                startX = clientX;
+                currentX = 0;
+                isDragging = true;
+                wrapper.classList.add("dragging");
+            }
+
+            function moveDrag(clientX) {
+                if (!isDragging) {
+                    return;
+                }
+
+                currentX = Math.max(0, clientX - startX);
+                if (currentX > 8) {
+                    card.dataset.draggingNotice = "true";
+                }
+                card.style.transform = "translateX(" + Math.min(currentX, 120) + "px)";
+            }
+
+            function endDrag() {
+                if (!isDragging) {
+                    return;
+                }
+
+                isDragging = false;
+                wrapper.classList.remove("dragging");
+
+                if (currentX >= 90) {
+                    moveNoticeToTrash(noticeId);
+                } else {
+                    card.style.transform = "";
+                }
+
+                window.setTimeout(function () {
+                    card.dataset.draggingNotice = "";
+                }, 0);
+            }
+
+            card.addEventListener("mousedown", function (event) {
+                startDrag(event.clientX);
+            });
+
+            window.addEventListener("mousemove", function (event) {
+                moveDrag(event.clientX);
+            });
+
+            window.addEventListener("mouseup", endDrag);
+
+            card.addEventListener("touchstart", function (event) {
+                startDrag(event.touches[0].clientX);
+            });
+
+            card.addEventListener("touchmove", function (event) {
+                moveDrag(event.touches[0].clientX);
+            });
+
+            card.addEventListener("touchend", endDrag);
+        }
+
+        function openTrashView() {
+            noticeListScrollTop = noticeList.scrollTop;
+            noticeOverview.classList.add("is-hidden");
+            noticeDetail.classList.remove("active");
+            noticeTrashView.classList.add("active");
+            isTrashSelectMode = false;
+            setFormMessage(trashMessage, "", "");
+            renderTrashView();
+        }
+
+        function backToNoticeOverviewFromTrash() {
+            noticeTrashView.classList.remove("active");
+            noticeOverview.classList.remove("is-hidden");
+            isTrashSelectMode = false;
+            renderNoticeList();
+            noticeList.scrollTop = noticeListScrollTop;
+        }
+
+        function renderTrashView() {
+            const trashedNotices = notices.filter(function (notice) {
+                return notice.isTrash && !notice.isDeleted;
+            });
+
+            trashList.innerHTML = "";
+            trashSelectButton.textContent = isTrashSelectMode ? "選択解除" : "選択";
+
+            if (trashedNotices.length === 0) {
+                const emptyMessage = document.createElement("p");
+                emptyMessage.className = "notice-empty";
+                emptyMessage.textContent = "ゴミ箱に入っているお知らせはありません。";
+                trashList.appendChild(emptyMessage);
+                return;
+            }
+
+            trashedNotices.forEach(function (notice) {
+                const item = document.createElement("div");
+                const checkbox = document.createElement("input");
+                const card = document.createElement("div");
+                const meta = document.createElement("div");
+                const sender = document.createElement("span");
+                const date = document.createElement("span");
+                const title = document.createElement("h3");
+                const preview = document.createElement("p");
+
+                item.className = "trash-item";
+                item.classList.toggle("selecting", isTrashSelectMode);
+                checkbox.type = "checkbox";
+                checkbox.className = "trash-check";
+                checkbox.value = String(notice.id);
+                card.className = "card notice-card";
+                meta.className = "notice-meta";
+                sender.className = "notice-sender";
+                date.className = "notice-date";
+                preview.className = "notice-preview";
+
+                sender.textContent = notice.senderCompany;
+                date.textContent = notice.dateTime;
+                title.textContent = notice.title;
+                preview.textContent = createNoticePreview(notice.body);
+
+                meta.appendChild(sender);
+                meta.appendChild(date);
+                card.appendChild(meta);
+                card.appendChild(title);
+                card.appendChild(preview);
+                item.appendChild(checkbox);
+                item.appendChild(card);
+                trashList.appendChild(item);
+            });
+        }
+
+        function toggleTrashSelectMode() {
+            isTrashSelectMode = !isTrashSelectMode;
+            setFormMessage(trashMessage, "", "");
+            renderTrashView();
+        }
+
+        function deleteSelectedTrashNotices() {
+            const checkedIds = Array.from(trashList.querySelectorAll(".trash-check:checked")).map(function (checkbox) {
+                return Number(checkbox.value);
+            });
+
+            checkedIds.forEach(function (id) {
+                const notice = notices.find(function (item) {
+                    return item.id === id;
+                });
+
+                if (notice) {
+                    notice.isDeleted = true;
+                }
+            });
+
+            setFormMessage(trashMessage, "選択したお知らせを削除しました。", "success");
+            renderTrashView();
+        }
+
+        function deleteAllTrashNotices() {
+            notices.forEach(function (notice) {
+                if (notice.isTrash) {
+                    notice.isDeleted = true;
+                }
+            });
+
+            setFormMessage(trashMessage, "ゴミ箱内のお知らせをすべて削除しました。", "success");
+            renderTrashView();
+        }
+
         function renderNoticeList() {
             noticeList.innerHTML = "";
             const filteredNotices = applyNoticeFilters();
@@ -1440,6 +1761,8 @@
             }
 
             filteredNotices.forEach(function (notice) {
+                const swipeWrap = document.createElement("div");
+                const trashRibbon = document.createElement("div");
                 const card = document.createElement("button");
                 const meta = document.createElement("div");
                 const sender = document.createElement("span");
@@ -1449,6 +1772,9 @@
                 const star = document.createElement("button");
                 const preview = document.createElement("p");
 
+                swipeWrap.className = "notice-swipe-wrap";
+                trashRibbon.className = "notice-trash-ribbon";
+                trashRibbon.textContent = "ゴミ箱へ移動";
                 card.type = "button";
                 card.className = "card notice-card";
                 meta.className = "notice-meta";
@@ -1482,6 +1808,9 @@
                 card.appendChild(preview);
 
                 card.addEventListener("click", function () {
+                    if (card.dataset.draggingNotice === "true") {
+                        return;
+                    }
                     showNoticeDetail(notice.id);
                 });
 
@@ -1491,7 +1820,10 @@
                     renderNoticeList();
                 });
 
-                noticeList.appendChild(card);
+                swipeWrap.appendChild(trashRibbon);
+                swipeWrap.appendChild(card);
+                noticeList.appendChild(swipeWrap);
+                enableSwipeToTrash(swipeWrap, card, notice.id);
             });
 
             noticeList.scrollTop = noticeListScrollTop;
@@ -1870,6 +2202,11 @@
         resetSettingsForms();
         renderNoticeList();
         noticeBackButton.addEventListener("click", backToNoticeList);
+        noticeTrashEntryButton.addEventListener("click", openTrashView);
+        trashBackButton.addEventListener("click", backToNoticeOverviewFromTrash);
+        trashSelectButton.addEventListener("click", toggleTrashSelectMode);
+        trashDeleteSelectedButton.addEventListener("click", deleteSelectedTrashNotices);
+        trashDeleteAllButton.addEventListener("click", deleteAllTrashNotices);
         noticeDetailStar.addEventListener("click", function () {
             if (currentNoticeDetailId === null) {
                 return;
