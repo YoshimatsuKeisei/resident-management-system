@@ -222,8 +222,13 @@ def mypage(request):
         # セッションにIDがあってもDBに入居者がいない場合は、安全のためトップへ戻します。
         return redirect("accounts:top")
 
+    # マイページ内の「ログイン履歴」画面で使うため、ログイン中の入居者の履歴だけ取得します。
+    # セッションIDや入居者IDは画面に出さず、日時とログの種類だけを表示します。
+    login_histories = LoginHistory.objects.filter(tenant=tenant).order_by("-occurred_at")
+
     context = {
         "tenant": tenant,
+        "login_histories": login_histories,
     }
 
     return render(request, "accounts/mypage.html", context)
