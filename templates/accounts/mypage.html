@@ -199,15 +199,13 @@
         .notice-list {
             display: grid;
             gap: 12px;
-            max-height: calc(100vh - 190px);
             padding-right: 4px;
             padding-bottom: 24px;
-            overflow-y: auto;
         }
 
         .notice-filter {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: minmax(140px, 180px) minmax(160px, 1fr);
             gap: 10px;
             margin-bottom: 14px;
         }
@@ -306,16 +304,41 @@
             background-color: #dc2626;
             color: #ffffff;
             font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.16s ease;
         }
 
         .notice-swipe-wrap .notice-card {
             position: relative;
             z-index: 1;
+            margin-bottom: 0;
             transition: transform 0.18s ease;
+        }
+
+        .notice-swipe-wrap.dragging .notice-trash-ribbon,
+        .notice-swipe-wrap.removing .notice-trash-ribbon {
+            opacity: 1;
         }
 
         .notice-swipe-wrap.dragging .notice-card {
             transition: none;
+        }
+
+        .notice-swipe-wrap.removing {
+            overflow: hidden;
+            opacity: 0;
+            transition:
+                height 0.36s ease,
+                margin 0.36s ease,
+                opacity 0.28s ease;
+        }
+
+        .notice-swipe-wrap.removing .notice-card {
+            transform: translateX(130%);
+            transition:
+                transform 0.34s ease,
+                opacity 0.28s ease;
+            opacity: 0;
         }
 
         .notice-card:hover {
@@ -390,9 +413,7 @@
         }
 
         .notice-detail-body {
-            max-height: calc(100vh - 320px);
             padding-right: 4px;
-            overflow-y: auto;
             white-space: pre-line;
         }
 
@@ -430,10 +451,8 @@
         .trash-list {
             display: grid;
             gap: 12px;
-            max-height: calc(100vh - 260px);
             padding-right: 4px;
             padding-bottom: 24px;
-            overflow-y: auto;
         }
 
         .trash-item {
@@ -836,9 +855,18 @@
         }
 
         @media (max-width: 430px) {
-            .notice-filter,
+            .notice-filter {
+                display: flex;
+                overflow-x: auto;
+                padding-bottom: 4px;
+            }
+
+            .notice-filter label {
+                min-width: 160px;
+            }
+
             .notice-custom-period {
-                grid-template-columns: 1fr;
+                min-width: 320px;
             }
         }
     </style>
@@ -891,38 +919,19 @@
                 </div>
                 <div class="notice-filter card" aria-label="お知らせ絞り込み">
                     <label>
-                        送信元会社
-                        <select id="notice-company-filter">
-                            <option value="all">全て</option>
-                            <option value="管理会社">管理会社</option>
-                            <option value="不動産会社">不動産会社</option>
-                            <option value="保証会社">保証会社</option>
-                            <option value="大家">大家</option>
+                        絞り込み種類
+                        <select id="notice-filter-type">
+                            <option value="none">絞り込みなし</option>
+                            <option value="company">送信元会社</option>
+                            <option value="star">スター</option>
+                            <option value="period">期間</option>
+                            <option value="read">未読状態</option>
                         </select>
                     </label>
-                    <label>
-                        スター
-                        <select id="notice-star-filter">
+                    <label id="notice-filter-value-wrap">
+                        絞り込み値
+                        <select id="notice-filter-value">
                             <option value="all">全て</option>
-                            <option value="starred">スター付きのみ</option>
-                        </select>
-                    </label>
-                    <label>
-                        期間
-                        <select id="notice-period-filter">
-                            <option value="all">全て</option>
-                            <option value="week">1週間以内</option>
-                            <option value="month">1か月以内</option>
-                            <option value="three-months">3か月以内</option>
-                            <option value="custom">期間指定</option>
-                        </select>
-                    </label>
-                    <label>
-                        未読状態
-                        <select id="notice-read-filter">
-                            <option value="all">全て</option>
-                            <option value="unread">未読のみ</option>
-                            <option value="read">既読のみ</option>
                         </select>
                     </label>
                     <div class="notice-custom-period" id="notice-custom-period">
@@ -1268,10 +1277,9 @@
         const trashDeleteAllButton = document.getElementById("trash-delete-all-button");
         const trashMessage = document.getElementById("trash-message");
         const trashList = document.getElementById("trash-list");
-        const noticeCompanyFilter = document.getElementById("notice-company-filter");
-        const noticeStarFilter = document.getElementById("notice-star-filter");
-        const noticePeriodFilter = document.getElementById("notice-period-filter");
-        const noticeReadFilter = document.getElementById("notice-read-filter");
+        const noticeFilterType = document.getElementById("notice-filter-type");
+        const noticeFilterValue = document.getElementById("notice-filter-value");
+        const noticeFilterValueWrap = document.getElementById("notice-filter-value-wrap");
         const noticeCustomPeriod = document.getElementById("notice-custom-period");
         const noticeStartDate = document.getElementById("notice-start-date");
         const noticeEndDate = document.getElementById("notice-end-date");
@@ -1467,12 +1475,10 @@
         }
 
         function getNoticeFilterConditions() {
-            // 画面上のドロップダウンから、現在の絞り込み条件をまとめて取得します。
+            // 今回は複数条件のANDではなく、選ばれた1種類だけを有効にします。
             return {
-                company: noticeCompanyFilter.value,
-                star: noticeStarFilter.value,
-                period: noticePeriodFilter.value,
-                read: noticeReadFilter.value,
+                type: noticeFilterType.value,
+                value: noticeFilterValue.value,
                 startDate: noticeStartDate.value,
                 endDate: noticeEndDate.value
             };
@@ -1482,29 +1488,29 @@
             const noticeDate = parseNoticeDate(notice.dateTime);
             const now = new Date();
 
-            if (filters.period === "all") {
+            if (filters.value === "all") {
                 return true;
             }
 
-            if (filters.period === "week") {
+            if (filters.value === "week") {
                 const weekAgo = new Date(now);
                 weekAgo.setDate(now.getDate() - 7);
                 return noticeDate >= weekAgo && noticeDate <= now;
             }
 
-            if (filters.period === "month") {
+            if (filters.value === "month") {
                 const monthAgo = new Date(now);
                 monthAgo.setMonth(now.getMonth() - 1);
                 return noticeDate >= monthAgo && noticeDate <= now;
             }
 
-            if (filters.period === "three-months") {
+            if (filters.value === "three-months") {
                 const threeMonthsAgo = new Date(now);
                 threeMonthsAgo.setMonth(now.getMonth() - 3);
                 return noticeDate >= threeMonthsAgo && noticeDate <= now;
             }
 
-            if (filters.period === "custom") {
+            if (filters.value === "custom") {
                 if (filters.startDate !== "") {
                     const startDate = new Date(filters.startDate + "T00:00:00");
                     if (noticeDate < startDate) {
@@ -1531,24 +1537,56 @@
                     return false;
                 }
 
-                if (filters.company !== "all" && notice.senderCompany !== filters.company) {
-                    return false;
+                if (filters.type === "none") {
+                    return true;
                 }
 
-                if (filters.star === "starred" && !notice.isStarred) {
-                    return false;
+                if (filters.type === "company") {
+                    return notice.senderCompany === filters.value;
                 }
 
-                if (filters.read === "unread" && !notice.isUnread) {
-                    return false;
+                if (filters.type === "star") {
+                    return filters.value === "starred" && notice.isStarred;
                 }
 
-                if (filters.read === "read" && notice.isUnread) {
-                    return false;
+                if (filters.type === "read") {
+                    if (filters.value === "unread") {
+                        return notice.isUnread;
+                    }
+                    if (filters.value === "read") {
+                        return !notice.isUnread;
+                    }
                 }
 
-                return isInSelectedPeriod(notice, filters);
+                if (filters.type === "period") {
+                    return isInSelectedPeriod(notice, filters);
+                }
+
+                return true;
             });
+        }
+
+        function updateNoticeFilterValueOptions() {
+            const optionGroups = {
+                none: [["all", "全て"]],
+                company: [["管理会社", "管理会社"], ["不動産会社", "不動産会社"], ["保証会社", "保証会社"], ["大家", "大家"]],
+                star: [["starred", "スター付きのみ"]],
+                period: [["week", "1週間以内"], ["month", "1か月以内"], ["three-months", "3か月以内"], ["custom", "期間指定"]],
+                read: [["unread", "未読のみ"], ["read", "既読のみ"]]
+            };
+
+            const options = optionGroups[noticeFilterType.value];
+            noticeFilterValue.innerHTML = "";
+
+            options.forEach(function (option) {
+                const optionElement = document.createElement("option");
+                optionElement.value = option[0];
+                optionElement.textContent = option[1];
+                noticeFilterValue.appendChild(optionElement);
+            });
+
+            noticeFilterValueWrap.hidden = noticeFilterType.value === "none";
+            noticeCustomPeriod.classList.remove("active");
         }
 
         function toggleNoticeStar(noticeId) {
@@ -1575,6 +1613,23 @@
             // 今回は完全削除せず、JS上でisTrashをtrueにしてゴミ箱へ移動します。
             notice.isTrash = true;
             renderNoticeList();
+        }
+
+        function animateNoticeToTrash(wrapper, card, noticeId) {
+            // すぐ消さず、右へ抜ける余韻を見せてからゴミ箱へ移動します。
+            const currentHeight = wrapper.offsetHeight;
+            wrapper.style.height = currentHeight + "px";
+            wrapper.classList.add("removing");
+            card.style.transform = "";
+
+            window.requestAnimationFrame(function () {
+                wrapper.style.height = "0";
+                wrapper.style.marginBottom = "0";
+            });
+
+            window.setTimeout(function () {
+                moveNoticeToTrash(noticeId);
+            }, 380);
         }
 
         function enableSwipeToTrash(wrapper, card, noticeId) {
@@ -1610,7 +1665,7 @@
                 wrapper.classList.remove("dragging");
 
                 if (currentX >= 90) {
-                    moveNoticeToTrash(noticeId);
+                    animateNoticeToTrash(wrapper, card, noticeId);
                 } else {
                     card.style.transform = "";
                 }
@@ -2222,14 +2277,24 @@
             }
         });
 
-        [noticeCompanyFilter, noticeStarFilter, noticePeriodFilter, noticeReadFilter, noticeStartDate, noticeEndDate].forEach(function (filterField) {
+        noticeFilterType.addEventListener("change", function () {
+            updateNoticeFilterValueOptions();
+            noticeListScrollTop = 0;
+            renderNoticeList();
+        });
+
+        [noticeFilterValue, noticeStartDate, noticeEndDate].forEach(function (filterField) {
             filterField.addEventListener("change", function () {
                 // 絞り込み条件が変わったら、一覧を作り直します。
                 noticeListScrollTop = 0;
-                noticeCustomPeriod.classList.toggle("active", noticePeriodFilter.value === "custom");
+                noticeCustomPeriod.classList.toggle(
+                    "active",
+                    noticeFilterType.value === "period" && noticeFilterValue.value === "custom"
+                );
                 renderNoticeList();
             });
         });
+        updateNoticeFilterValueOptions();
     </script>
 </body>
 </html>
