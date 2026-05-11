@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マイページ</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background-color: #f3f5f7;
+            color: #1f2937;
+            font-family: Arial, sans-serif;
+        }
+
+        .app-shell {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            margin: 0 auto;
+            padding: 20px 16px 96px;
+            background-color: #f8fafc;
+        }
+
+        .page-header {
+            margin-bottom: 18px;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 26px;
+        }
+
+        .page-lead {
+            margin: 8px 0 0;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .section-title {
+            margin: 0 0 8px;
+            font-size: 20px;
+        }
+
+        .section-text {
+            margin: 0 0 16px;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .card {
+            margin-bottom: 14px;
+            padding: 16px;
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .category-button,
+        .action-button,
+        .setting-button {
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .category-button {
+            min-height: 48px;
+            padding: 10px;
+            border: 1px solid #cfd6dd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: #374151;
+            font-weight: bold;
+        }
+
+        .category-button.active {
+            border-color: #2563eb;
+            background-color: #eff6ff;
+            color: #2563eb;
+        }
+
+        .faq-box {
+            border-left: 4px solid #2563eb;
+        }
+
+        .mini-title {
+            margin: 0 0 8px;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .faq-question,
+        .faq-answer {
+            margin: 0 0 8px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 110px;
+            padding: 12px;
+            border: 1px solid #cfd6dd;
+            border-radius: 8px;
+            font: inherit;
+            resize: vertical;
+        }
+
+        .button-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .action-button,
+        .phone-link {
+            display: flex;
+            min-height: 48px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .phone-link {
+            background-color: #ffffff;
+            border: 1px solid #2563eb;
+            color: #2563eb;
+        }
+
+        .action-button {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+
+        .notice-card h3,
+        .settings-card h3 {
+            margin: 0 0 8px;
+            font-size: 16px;
+        }
+
+        .notice-date {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .notice-body {
+            margin: 8px 0 0;
+            color: #4b5563;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .unread-label {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background-color: #dbeafe;
+            color: #2563eb;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .profile-list {
+            margin: 0;
+        }
+
+        .profile-row {
+            display: grid;
+            grid-template-columns: 42% 58%;
+            gap: 10px;
+            padding: 11px 0;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 14px;
+        }
+
+        .profile-row:last-child {
+            border-bottom: none;
+        }
+
+        .profile-row dt {
+            color: #6b7280;
+            font-weight: bold;
+        }
+
+        .profile-row dd {
+            margin: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .settings-group-title {
+            margin: 22px 0 10px;
+            font-size: 16px;
+        }
+
+        .setting-button {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 46px;
+            padding: 0;
+            border-bottom: 1px solid #edf2f7;
+            background-color: transparent;
+            color: #374151;
+            text-align: left;
+        }
+
+        .setting-button:last-child {
+            border-bottom: none;
+        }
+
+        .setting-button::after {
+            content: ">";
+            color: #9ca3af;
+            font-weight: bold;
+        }
+
+        .status-message,
+        .closed-notice {
+            margin: 12px 0 0;
+            padding: 12px;
+            border-radius: 8px;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .closed-notice {
+            background-color: #fff7ed;
+            color: #9a3412;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            padding: 8px 12px 12px;
+            background-color: rgba(248, 250, 252, 0.96);
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .bottom-nav-inner {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            width: 100%;
+            max-width: 480px;
+            gap: 6px;
+        }
+
+        .nav-button {
+            min-height: 52px;
+            padding: 6px 4px;
+            border: none;
+            border-radius: 8px;
+            background-color: transparent;
+            color: #6b7280;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .nav-button.active {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+
+        @media (min-width: 700px) {
+            .app-shell {
+                margin-top: 24px;
+                margin-bottom: 24px;
+                min-height: calc(100vh - 48px);
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app-shell">
+        <header class="page-header">
+            <h1 class="page-title">マイページ</h1>
+            <p class="page-lead">入居者向けの確認・連絡機能をまとめたUIプロトタイプです。</p>
+        </header>
+
+        <section class="tab-panel active" id="tab-contact">
+            <h2 class="section-title">管理会社へのお問い合わせ</h2>
+            <p class="section-text">お問い合わせ内容を選択してください。</p>
+
+            <div class="category-grid" aria-label="問い合わせカテゴリ">
+                <button type="button" class="category-button active" data-category="rent">家賃・支払い</button>
+                <button type="button" class="category-button" data-category="renewal">契約更新</button>
+                <button type="button" class="category-button" data-category="equipment">設備トラブル</button>
+                <button type="button" class="category-button" data-category="noise">騒音・近隣トラブル</button>
+                <button type="button" class="category-button" data-category="moveout">退去・解約</button>
+                <button type="button" class="category-button" data-category="other">その他</button>
+            </div>
+
+            <div class="card faq-box">
+                <p class="mini-title">よくある質問</p>
+                <p class="faq-question" id="faq-question">家賃の支払い状況はどこで確認できますか？</p>
+                <p class="mini-title">回答例</p>
+                <p class="faq-answer" id="faq-answer">支払い状況の確認機能は今後実装予定です。お急ぎの場合は管理会社へお問い合わせください。</p>
+            </div>
+
+            <div class="card">
+                <h3 class="mini-title">解決しない場合</h3>
+                <textarea id="message-body" placeholder="お問い合わせ内容を入力してください。"></textarea>
+                <div class="closed-notice">現在は営業時間外です。メッセージは翌営業開始時間に送信予約されます。</div>
+                <div class="button-row">
+                    <a class="phone-link" href="tel:0000000000">電話する</a>
+                    <button type="button" class="action-button" id="send-message-button">メッセージを送る</button>
+                </div>
+                <p class="status-message" id="contact-status" hidden></p>
+            </div>
+        </section>
+
+        <section class="tab-panel" id="tab-notices">
+            <h2 class="section-title">管理会社等からのお知らせ</h2>
+
+            <article class="card notice-card">
+                <span class="notice-date">2026/05/10</span><span class="unread-label">未読</span>
+                <h3>設備点検のお知らせ</h3>
+                <p class="notice-body">共用部設備の点検を予定しています。作業時間中は一部設備が利用しづらい場合があります。</p>
+            </article>
+
+            <article class="card notice-card">
+                <span class="notice-date">2026/05/01</span>
+                <h3>契約更新時期のお知らせ</h3>
+                <p class="notice-body">契約更新の時期が近づいています。詳細な手続きは後日管理会社よりご案内します。</p>
+            </article>
+
+            <article class="card notice-card">
+                <span class="notice-date">2026/04/20</span>
+                <h3>ゴミ出しルール変更のお知らせ</h3>
+                <p class="notice-body">来月から資源ごみの回収曜日が変更されます。掲示板の案内もあわせてご確認ください。</p>
+            </article>
+        </section>
+
+        <section class="tab-panel" id="tab-profile">
+            <h2 class="section-title">プロフィール・個人情報</h2>
+
+            {% if tenant %}
+                <div class="card">
+                    <dl class="profile-list">
+                        <div class="profile-row"><dt>入居者ID</dt><dd>{{ tenant.id }}</dd></div>
+                        <div class="profile-row"><dt>入居者名</dt><dd>{{ tenant.tenant_name }}</dd></div>
+                        <div class="profile-row"><dt>メールアドレス</dt><dd>{{ tenant.email }}</dd></div>
+                        <div class="profile-row"><dt>電話番号</dt><dd>{{ tenant.phone_number }}</dd></div>
+                        <div class="profile-row"><dt>郵便番号</dt><dd>{{ tenant.postal_code }}</dd></div>
+                        <div class="profile-row"><dt>都道府県</dt><dd>{{ tenant.prefecture }}</dd></div>
+                        <div class="profile-row"><dt>市区町村</dt><dd>{{ tenant.city }}</dd></div>
+                        <div class="profile-row"><dt>町名・丁目・番地</dt><dd>{{ tenant.street_address }}</dd></div>
+                        <div class="profile-row"><dt>建物名・部屋番号</dt><dd>{{ tenant.building_name|default:"未登録" }}</dd></div>
+                        <div class="profile-row"><dt>生年月日</dt><dd>{{ tenant.birth_date }}</dd></div>
+                        <div class="profile-row"><dt>登録日時</dt><dd>{{ tenant.created_at }}</dd></div>
+                    </dl>
+                </div>
+            {% else %}
+                <div class="card">
+                    <p class="section-text">ログイン中の入居者情報はまだ取得できません。</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="tab-panel" id="tab-settings">
+            <h2 class="section-title">設定</h2>
+            <p class="section-text">各項目はUI確認用です。クリックしても実際の更新処理は行いません。</p>
+
+            <h3 class="settings-group-title">アカウント設定</h3>
+            <div class="card settings-card">
+                <button type="button" class="setting-button">登録メールアドレスの変更</button>
+                <button type="button" class="setting-button">電話番号の追加・変更・削除</button>
+                <button type="button" class="setting-button">パスワード変更</button>
+                <button type="button" class="setting-button">アカウント削除申請</button>
+            </div>
+
+            <h3 class="settings-group-title">表示設定</h3>
+            <div class="card settings-card">
+                <button type="button" class="setting-button">言語変更</button>
+                <button type="button" class="setting-button">文字サイズ変更</button>
+                <button type="button" class="setting-button">ダークモード</button>
+            </div>
+
+            <h3 class="settings-group-title">通知設定</h3>
+            <div class="card settings-card">
+                <button type="button" class="setting-button">お知らせ通知</button>
+                <button type="button" class="setting-button">メール通知</button>
+                <button type="button" class="setting-button">SMS通知</button>
+                <button type="button" class="setting-button">メンテナンス通知</button>
+                <button type="button" class="setting-button">支払い・契約更新通知</button>
+            </div>
+
+            <h3 class="settings-group-title">連絡設定</h3>
+            <div class="card settings-card">
+                <button type="button" class="setting-button">希望連絡方法</button>
+                <button type="button" class="setting-button">電話可能時間帯</button>
+                <button type="button" class="setting-button">緊急連絡先</button>
+            </div>
+
+            <h3 class="settings-group-title">セキュリティ設定</h3>
+            <div class="card settings-card">
+                <button type="button" class="setting-button">ログイン履歴確認</button>
+                <button type="button" class="setting-button">端末管理</button>
+                <button type="button" class="setting-button">2段階認証 仮</button>
+            </div>
+
+            <p class="status-message" id="settings-status" hidden></p>
+        </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="マイページ内メニュー">
+        <div class="bottom-nav-inner">
+            <button type="button" class="nav-button active" data-tab="contact">お問い合わせ</button>
+            <button type="button" class="nav-button" data-tab="notices">お知らせ</button>
+            <button type="button" class="nav-button" data-tab="profile">プロフィール</button>
+            <button type="button" class="nav-button" data-tab="settings">設定</button>
+        </div>
+    </nav>
+
+    <script>
+        const navButtons = document.querySelectorAll(".nav-button");
+        const tabPanels = document.querySelectorAll(".tab-panel");
+        const categoryButtons = document.querySelectorAll(".category-button");
+        const faqQuestion = document.getElementById("faq-question");
+        const faqAnswer = document.getElementById("faq-answer");
+        const sendMessageButton = document.getElementById("send-message-button");
+        const contactStatus = document.getElementById("contact-status");
+        const settingButtons = document.querySelectorAll(".setting-button");
+        const settingsStatus = document.getElementById("settings-status");
+
+        const faqItems = {
+            rent: {
+                question: "家賃の支払い状況はどこで確認できますか？",
+                answer: "支払い状況の確認機能は今後実装予定です。お急ぎの場合は管理会社へお問い合わせください。"
+            },
+            renewal: {
+                question: "契約更新の手続きはいつ始まりますか？",
+                answer: "通常は更新時期が近づいた段階で管理会社から案内します。画面上の通知機能は今後実装予定です。"
+            },
+            equipment: {
+                question: "設備の不具合は写真付きで送れますか？",
+                answer: "写真添付機能は今後実装予定です。今回はメッセージ入力欄のUIのみ確認できます。"
+            },
+            noise: {
+                question: "近隣トラブルは匿名で相談できますか？",
+                answer: "相談方法の詳細は今後設計します。まずは状況を整理して管理会社へ連絡する想定です。"
+            },
+            moveout: {
+                question: "退去の申し込みはこの画面でできますか？",
+                answer: "退去申請機能は今後実装予定です。今回は問い合わせ導線のプロトタイプです。"
+            },
+            other: {
+                question: "どのカテゴリを選べばよいかわかりません。",
+                answer: "迷った場合はその他を選び、内容を自由入力欄に記入する想定です。"
+            }
+        };
+
+        // 下部ナビゲーションを押したら、同じHTML内の表示エリアだけを切り替えます。
+        navButtons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                const selectedTab = button.dataset.tab;
+
+                navButtons.forEach(function (navButton) {
+                    navButton.classList.toggle("active", navButton === button);
+                });
+
+                tabPanels.forEach(function (panel) {
+                    panel.classList.toggle("active", panel.id === "tab-" + selectedTab);
+                });
+            });
+        });
+
+        // 問い合わせカテゴリに応じて、表示するFAQの文言だけを差し替えます。
+        categoryButtons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                const selectedCategory = button.dataset.category;
+                const selectedFaq = faqItems[selectedCategory];
+
+                categoryButtons.forEach(function (categoryButton) {
+                    categoryButton.classList.toggle("active", categoryButton === button);
+                });
+
+                faqQuestion.textContent = selectedFaq.question;
+                faqAnswer.textContent = selectedFaq.answer;
+            });
+        });
+
+        // 今回はDB保存や送信はせず、受付メッセージだけを画面に出します。
+        sendMessageButton.addEventListener("click", function () {
+            contactStatus.hidden = false;
+            contactStatus.textContent = "メッセージ送信を受け付けました。";
+        });
+
+        // 設定項目は将来の実装予定なので、今は仮メッセージだけ表示します。
+        settingButtons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                settingsStatus.hidden = false;
+                settingsStatus.textContent = "この設定は後で実装します。";
+            });
+        });
+    </script>
+</body>
+</html>

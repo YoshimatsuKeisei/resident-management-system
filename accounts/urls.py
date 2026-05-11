@@ -15,6 +15,8 @@ urlpatterns = [
     path("signup/", views.signup, name="signup"),
     # password-reset/は、パスワード変更ページを表示するURLです。
     path("password-reset/", views.password_reset, name="password_reset"),
+    # mypage/は、ログイン後に入居者が使うマイページ画面を表示するURLです。
+    path("mypage/", views.mypage, name="mypage"),
     # management/tenants/は、管理者用の入居者一覧ページを表示するURLです。
     path("management/tenants/", views.tenant_list, name="tenant_list"),
     # management/login-histories/は、管理者用のログイン履歴一覧ページを表示するURLです。

@@ -205,6 +205,24 @@ def password_reset(request):
     return render(request, template_name, context)
 
 
+def mypage(request):
+    """ログイン後に入居者が見るマイページ画面を表示します。"""
+    # 今回はUIプロトタイプなので、ログイン必須チェックやDB更新は行いません。
+    # セッションにtenant_idがある場合だけ、プロフィール表示用に入居者情報を取得します。
+    tenant_id = request.session.get("tenant_id")
+    tenant = None
+
+    if tenant_id is not None:
+        # first()を使うと、該当データがない場合もエラーにならずNoneを返せます。
+        tenant = TenantProfile.objects.filter(id=tenant_id).first()
+
+    context = {
+        "tenant": tenant,
+    }
+
+    return render(request, "accounts/mypage.html", context)
+
+
 def tenant_list(request):
     """管理者用の入居者一覧ページを表示します。"""
     # DBに保存されている入居者データを、登録日時が新しい順に取得します。
