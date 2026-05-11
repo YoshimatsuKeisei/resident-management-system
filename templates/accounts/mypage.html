@@ -205,6 +205,43 @@
             overflow-y: auto;
         }
 
+        .notice-filter {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .notice-filter label {
+            display: grid;
+            gap: 6px;
+            color: #374151;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .notice-filter select,
+        .notice-filter input {
+            width: 100%;
+            min-height: 42px;
+            padding: 8px 10px;
+            border: 1px solid #cfd6dd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            font: inherit;
+        }
+
+        .notice-custom-period {
+            display: none;
+            grid-column: 1 / -1;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .notice-custom-period.active {
+            display: grid;
+        }
+
         .notice-list::-webkit-scrollbar,
         .notice-detail-body::-webkit-scrollbar {
             width: 8px;
@@ -255,7 +292,13 @@
 
         .notice-star {
             flex: 0 0 auto;
+            width: 38px;
+            height: 38px;
+            border: none;
+            border-radius: 999px;
+            background-color: #eff6ff;
             color: #2563eb;
+            cursor: pointer;
             font-size: 18px;
             line-height: 1;
         }
@@ -296,6 +339,16 @@
             display: flex;
             justify-content: flex-start;
             margin-top: 16px;
+        }
+
+        .notice-empty {
+            margin: 0;
+            padding: 18px;
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: #6b7280;
+            font-size: 14px;
+            text-align: center;
         }
 
         .unread-label {
@@ -671,6 +724,13 @@
                 box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
             }
         }
+
+        @media (max-width: 430px) {
+            .notice-filter,
+            .notice-custom-period {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -716,6 +776,53 @@
             <h2 class="section-title">管理会社等からのお知らせ</h2>
 
             <div class="notice-overview" id="notice-overview">
+                <div class="notice-filter card" aria-label="お知らせ絞り込み">
+                    <label>
+                        送信元会社
+                        <select id="notice-company-filter">
+                            <option value="all">全て</option>
+                            <option value="管理会社">管理会社</option>
+                            <option value="不動産会社">不動産会社</option>
+                            <option value="保証会社">保証会社</option>
+                            <option value="大家">大家</option>
+                        </select>
+                    </label>
+                    <label>
+                        スター
+                        <select id="notice-star-filter">
+                            <option value="all">全て</option>
+                            <option value="starred">スター付きのみ</option>
+                        </select>
+                    </label>
+                    <label>
+                        期間
+                        <select id="notice-period-filter">
+                            <option value="all">全て</option>
+                            <option value="week">1週間以内</option>
+                            <option value="month">1か月以内</option>
+                            <option value="three-months">3か月以内</option>
+                            <option value="custom">期間指定</option>
+                        </select>
+                    </label>
+                    <label>
+                        未読状態
+                        <select id="notice-read-filter">
+                            <option value="all">全て</option>
+                            <option value="unread">未読のみ</option>
+                            <option value="read">既読のみ</option>
+                        </select>
+                    </label>
+                    <div class="notice-custom-period" id="notice-custom-period">
+                        <label>
+                            開始日
+                            <input type="date" id="notice-start-date">
+                        </label>
+                        <label>
+                            終了日
+                            <input type="date" id="notice-end-date">
+                        </label>
+                    </div>
+                </div>
                 <div class="notice-list" id="notice-list" aria-label="お知らせ一覧"></div>
             </div>
 
@@ -724,7 +831,7 @@
                     <div class="notice-meta">
                         <span class="notice-sender" id="notice-detail-sender"></span>
                         <span id="notice-detail-date"></span>
-                        <span class="notice-star" id="notice-detail-star"></span>
+                        <button type="button" class="notice-star" id="notice-detail-star" aria-label="スター切り替え"></button>
                     </div>
                     <h3 class="section-title" id="notice-detail-title"></h3>
                     <div class="notice-detail-body" id="notice-detail-body"></div>
@@ -1026,6 +1133,13 @@
         const noticeDetailTitle = document.getElementById("notice-detail-title");
         const noticeDetailBody = document.getElementById("notice-detail-body");
         const noticeBackButton = document.getElementById("notice-back-button");
+        const noticeCompanyFilter = document.getElementById("notice-company-filter");
+        const noticeStarFilter = document.getElementById("notice-star-filter");
+        const noticePeriodFilter = document.getElementById("notice-period-filter");
+        const noticeReadFilter = document.getElementById("notice-read-filter");
+        const noticeCustomPeriod = document.getElementById("notice-custom-period");
+        const noticeStartDate = document.getElementById("notice-start-date");
+        const noticeEndDate = document.getElementById("notice-end-date");
         const categoryButtons = document.querySelectorAll(".category-button");
         const faqQuestion = document.getElementById("faq-question");
         const faqAnswer = document.getElementById("faq-answer");
@@ -1066,6 +1180,7 @@
         let settingsListScrollTop = 0;
         let activeDetailName = "";
         let noticeListScrollTop = 0;
+        let currentNoticeDetailId = null;
 
         const notices = [
             {
@@ -1211,21 +1326,127 @@
             notice.isUnread = false;
         }
 
-        function renderNoticeList() {
-            noticeList.innerHTML = "";
+        function parseNoticeDate(dateTime) {
+            return new Date(dateTime.replace(" ", "T"));
+        }
 
-            notices.forEach(function (notice) {
-                if (notice.isTrash) {
-                    return;
+        function getNoticeFilterConditions() {
+            // 画面上のドロップダウンから、現在の絞り込み条件をまとめて取得します。
+            return {
+                company: noticeCompanyFilter.value,
+                star: noticeStarFilter.value,
+                period: noticePeriodFilter.value,
+                read: noticeReadFilter.value,
+                startDate: noticeStartDate.value,
+                endDate: noticeEndDate.value
+            };
+        }
+
+        function isInSelectedPeriod(notice, filters) {
+            const noticeDate = parseNoticeDate(notice.dateTime);
+            const now = new Date();
+
+            if (filters.period === "all") {
+                return true;
+            }
+
+            if (filters.period === "week") {
+                const weekAgo = new Date(now);
+                weekAgo.setDate(now.getDate() - 7);
+                return noticeDate >= weekAgo && noticeDate <= now;
+            }
+
+            if (filters.period === "month") {
+                const monthAgo = new Date(now);
+                monthAgo.setMonth(now.getMonth() - 1);
+                return noticeDate >= monthAgo && noticeDate <= now;
+            }
+
+            if (filters.period === "three-months") {
+                const threeMonthsAgo = new Date(now);
+                threeMonthsAgo.setMonth(now.getMonth() - 3);
+                return noticeDate >= threeMonthsAgo && noticeDate <= now;
+            }
+
+            if (filters.period === "custom") {
+                if (filters.startDate !== "") {
+                    const startDate = new Date(filters.startDate + "T00:00:00");
+                    if (noticeDate < startDate) {
+                        return false;
+                    }
                 }
 
+                if (filters.endDate !== "") {
+                    const endDate = new Date(filters.endDate + "T23:59:59");
+                    if (noticeDate > endDate) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        function applyNoticeFilters() {
+            const filters = getNoticeFilterConditions();
+
+            return notices.filter(function (notice) {
+                if (notice.isTrash) {
+                    return false;
+                }
+
+                if (filters.company !== "all" && notice.senderCompany !== filters.company) {
+                    return false;
+                }
+
+                if (filters.star === "starred" && !notice.isStarred) {
+                    return false;
+                }
+
+                if (filters.read === "unread" && !notice.isUnread) {
+                    return false;
+                }
+
+                if (filters.read === "read" && notice.isUnread) {
+                    return false;
+                }
+
+                return isInSelectedPeriod(notice, filters);
+            });
+        }
+
+        function toggleNoticeStar(noticeId) {
+            const notice = notices.find(function (item) {
+                return item.id === noticeId;
+            });
+
+            if (!notice) {
+                return;
+            }
+
+            notice.isStarred = !notice.isStarred;
+        }
+
+        function renderNoticeList() {
+            noticeList.innerHTML = "";
+            const filteredNotices = applyNoticeFilters();
+
+            if (filteredNotices.length === 0) {
+                const emptyMessage = document.createElement("p");
+                emptyMessage.className = "notice-empty";
+                emptyMessage.textContent = "条件に一致するお知らせはありません。";
+                noticeList.appendChild(emptyMessage);
+                return;
+            }
+
+            filteredNotices.forEach(function (notice) {
                 const card = document.createElement("button");
                 const meta = document.createElement("div");
                 const sender = document.createElement("span");
                 const date = document.createElement("span");
                 const titleRow = document.createElement("div");
                 const title = document.createElement("h3");
-                const star = document.createElement("span");
+                const star = document.createElement("button");
                 const preview = document.createElement("p");
 
                 card.type = "button";
@@ -1235,6 +1456,8 @@
                 date.className = "notice-date";
                 titleRow.className = "notice-title-row";
                 star.className = "notice-star";
+                star.type = "button";
+                star.setAttribute("aria-label", "スター切り替え");
                 preview.className = "notice-preview";
 
                 sender.textContent = notice.senderCompany;
@@ -1262,6 +1485,12 @@
                     showNoticeDetail(notice.id);
                 });
 
+                star.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    toggleNoticeStar(notice.id);
+                    renderNoticeList();
+                });
+
                 noticeList.appendChild(card);
             });
 
@@ -1285,6 +1514,7 @@
             noticeDetailStar.textContent = notice.isStarred ? "★" : "☆";
             noticeDetailTitle.textContent = notice.title;
             noticeDetailBody.textContent = notice.body;
+            currentNoticeDetailId = notice.id;
 
             noticeOverview.classList.add("is-hidden");
             noticeDetail.classList.add("active");
@@ -1294,6 +1524,7 @@
         function backToNoticeList() {
             noticeDetail.classList.remove("active");
             noticeOverview.classList.remove("is-hidden");
+            currentNoticeDetailId = null;
             renderNoticeList();
             noticeList.scrollTop = noticeListScrollTop;
         }
@@ -1639,6 +1870,29 @@
         resetSettingsForms();
         renderNoticeList();
         noticeBackButton.addEventListener("click", backToNoticeList);
+        noticeDetailStar.addEventListener("click", function () {
+            if (currentNoticeDetailId === null) {
+                return;
+            }
+
+            toggleNoticeStar(currentNoticeDetailId);
+            const notice = notices.find(function (item) {
+                return item.id === currentNoticeDetailId;
+            });
+
+            if (notice) {
+                noticeDetailStar.textContent = notice.isStarred ? "★" : "☆";
+            }
+        });
+
+        [noticeCompanyFilter, noticeStarFilter, noticePeriodFilter, noticeReadFilter, noticeStartDate, noticeEndDate].forEach(function (filterField) {
+            filterField.addEventListener("change", function () {
+                // 絞り込み条件が変わったら、一覧を作り直します。
+                noticeListScrollTop = 0;
+                noticeCustomPeriod.classList.toggle("active", noticePeriodFilter.value === "custom");
+                renderNoticeList();
+            });
+        });
     </script>
 </body>
 </html>
