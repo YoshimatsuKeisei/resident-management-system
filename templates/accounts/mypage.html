@@ -196,6 +196,108 @@
             line-height: 1.7;
         }
 
+        .notice-list {
+            display: grid;
+            gap: 12px;
+            max-height: calc(100vh - 190px);
+            padding-right: 4px;
+            padding-bottom: 24px;
+            overflow-y: auto;
+        }
+
+        .notice-list::-webkit-scrollbar,
+        .notice-detail-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .notice-list::-webkit-scrollbar-track,
+        .notice-detail-body::-webkit-scrollbar-track {
+            background-color: #edf2f7;
+        }
+
+        .notice-list::-webkit-scrollbar-thumb,
+        .notice-detail-body::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 999px;
+        }
+
+        .notice-card {
+            width: 100%;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .notice-card:hover {
+            border-color: #bfdbfe;
+        }
+
+        .notice-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+            align-items: center;
+            margin-bottom: 8px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .notice-sender {
+            font-weight: bold;
+        }
+
+        .notice-title-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .notice-star {
+            flex: 0 0 auto;
+            color: #2563eb;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .notice-preview {
+            display: -webkit-box;
+            min-height: 48px;
+            max-height: 48px;
+            margin: 8px 0 0;
+            overflow: hidden;
+            color: #4b5563;
+            font-size: 14px;
+            line-height: 1.7;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+
+        .notice-detail {
+            display: none;
+        }
+
+        .notice-detail.active {
+            display: block;
+        }
+
+        .notice-overview.is-hidden {
+            display: none;
+        }
+
+        .notice-detail-body {
+            max-height: calc(100vh - 320px);
+            padding-right: 4px;
+            overflow-y: auto;
+            white-space: pre-line;
+        }
+
+        .notice-detail-actions {
+            display: flex;
+            justify-content: flex-start;
+            margin-top: 16px;
+        }
+
         .unread-label {
             display: inline-block;
             margin-left: 8px;
@@ -613,23 +715,24 @@
         <section class="tab-panel" id="tab-notices">
             <h2 class="section-title">管理会社等からのお知らせ</h2>
 
-            <article class="card notice-card">
-                <span class="notice-date">2026/05/10</span><span class="unread-label">未読</span>
-                <h3>設備点検のお知らせ</h3>
-                <p class="notice-body">共用部設備の点検を予定しています。作業時間中は一部設備が利用しづらい場合があります。</p>
-            </article>
+            <div class="notice-overview" id="notice-overview">
+                <div class="notice-list" id="notice-list" aria-label="お知らせ一覧"></div>
+            </div>
 
-            <article class="card notice-card">
-                <span class="notice-date">2026/05/01</span>
-                <h3>契約更新時期のお知らせ</h3>
-                <p class="notice-body">契約更新の時期が近づいています。詳細な手続きは後日管理会社よりご案内します。</p>
-            </article>
-
-            <article class="card notice-card">
-                <span class="notice-date">2026/04/20</span>
-                <h3>ゴミ出しルール変更のお知らせ</h3>
-                <p class="notice-body">来月から資源ごみの回収曜日が変更されます。掲示板の案内もあわせてご確認ください。</p>
-            </article>
+            <div class="notice-detail" id="notice-detail">
+                <div class="card">
+                    <div class="notice-meta">
+                        <span class="notice-sender" id="notice-detail-sender"></span>
+                        <span id="notice-detail-date"></span>
+                        <span class="notice-star" id="notice-detail-star"></span>
+                    </div>
+                    <h3 class="section-title" id="notice-detail-title"></h3>
+                    <div class="notice-detail-body" id="notice-detail-body"></div>
+                    <div class="notice-detail-actions">
+                        <button type="button" class="back-button" id="notice-back-button">←</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <section class="tab-panel" id="tab-profile">
@@ -914,6 +1017,15 @@
         const navButtons = document.querySelectorAll(".nav-button");
         const tabPanels = document.querySelectorAll(".tab-panel");
         const appShell = document.querySelector(".app-shell");
+        const noticeOverview = document.getElementById("notice-overview");
+        const noticeList = document.getElementById("notice-list");
+        const noticeDetail = document.getElementById("notice-detail");
+        const noticeDetailSender = document.getElementById("notice-detail-sender");
+        const noticeDetailDate = document.getElementById("notice-detail-date");
+        const noticeDetailStar = document.getElementById("notice-detail-star");
+        const noticeDetailTitle = document.getElementById("notice-detail-title");
+        const noticeDetailBody = document.getElementById("notice-detail-body");
+        const noticeBackButton = document.getElementById("notice-back-button");
         const categoryButtons = document.querySelectorAll(".category-button");
         const faqQuestion = document.getElementById("faq-question");
         const faqAnswer = document.getElementById("faq-answer");
@@ -953,6 +1065,110 @@
         let activeTabName = "contact";
         let settingsListScrollTop = 0;
         let activeDetailName = "";
+        let noticeListScrollTop = 0;
+
+        const notices = [
+            {
+                id: 1,
+                title: "設備点検のお知らせ",
+                senderCompany: "管理会社",
+                dateTime: "2026-05-12 09:30",
+                body: "共用部の給水ポンプ、照明、エントランス自動ドアの点検を実施します。\n作業中は担当者が建物内を巡回し、一時的に機器の動作確認音が発生する場合があります。入居者様のお部屋に立ち入る予定はありませんが、共用部をご利用の際は作業員の案内に従って通行してください。\n点検結果により追加作業が必要になった場合は、あらためてお知らせします。",
+                isUnread: true,
+                isStarred: true,
+                isTrash: false
+            },
+            {
+                id: 2,
+                title: "契約更新時期のお知らせ",
+                senderCompany: "不動産会社",
+                dateTime: "2026-05-11 14:00",
+                body: "現在の賃貸借契約の更新時期が近づいています。\n更新に関する書類は順次ご案内予定です。内容をご確認いただき、期日までに必要事項の記入と返送をお願いします。更新料や保険に関するご案内も同封予定です。\n不明点がある場合は、管理会社または不動産会社までお問い合わせください。",
+                isUnread: true,
+                isStarred: false,
+                isTrash: false
+            },
+            {
+                id: 3,
+                title: "家賃引き落とし予定のお知らせ",
+                senderCompany: "管理会社",
+                dateTime: "2026-05-10 10:15",
+                body: "今月分の家賃引き落とし予定日についてお知らせします。\n口座振替日は月末予定です。前日までに登録口座の残高をご確認ください。残高不足により引き落としができなかった場合、再振替や振込手数料が発生することがあります。\nお支払い状況の個別確認は、今後マイページ上で確認できるようにする予定です。",
+                isUnread: false,
+                isStarred: true,
+                isTrash: false
+            },
+            {
+                id: 4,
+                title: "ゴミ出しルール変更のお知らせ",
+                senderCompany: "大家",
+                dateTime: "2026-05-09 18:20",
+                body: "来月より資源ごみの回収曜日が変更されます。\nペットボトル、缶、びんの回収日はこれまでの水曜日から金曜日に変更されます。可燃ごみ、不燃ごみの曜日に変更はありません。\n回収日以外に出されたごみは近隣トラブルの原因になりますので、必ず指定日の朝に出してください。",
+                isUnread: true,
+                isStarred: false,
+                isTrash: false
+            },
+            {
+                id: 5,
+                title: "共用部清掃日のお知らせ",
+                senderCompany: "管理会社",
+                dateTime: "2026-05-08 08:45",
+                body: "共用廊下、階段、エントランス周辺の定期清掃を実施します。\n清掃中は床面が濡れて滑りやすくなる場合があります。掲示や清掃員の案内にご注意ください。私物や傘などが共用廊下に置かれている場合、清掃の妨げになるため事前に室内へ移動をお願いします。",
+                isUnread: false,
+                isStarred: false,
+                isTrash: false
+            },
+            {
+                id: 6,
+                title: "断水予定のお知らせ",
+                senderCompany: "管理会社",
+                dateTime: "2026-05-07 16:10",
+                body: "給水設備工事に伴い、建物全体で断水を予定しています。\n断水予定時間中はキッチン、浴室、洗面、トイレの水が使用できません。必要な水は事前に確保してください。工事完了後は水が濁る場合がありますので、しばらく水を流してからご使用ください。\n天候や作業状況により終了時刻が前後する場合があります。",
+                isUnread: true,
+                isStarred: true,
+                isTrash: false
+            },
+            {
+                id: 7,
+                title: "保証会社からの確認依頼",
+                senderCompany: "保証会社",
+                dateTime: "2026-05-06 11:05",
+                body: "保証契約に関する登録情報確認のお願いです。\n登録されている電話番号や勤務先情報に変更がある場合は、保証会社からの案内に沿って確認手続きをお願いします。確認が完了しない場合、今後の契約更新手続きに時間がかかる可能性があります。\n身に覚えのない連絡があった場合は、直接管理会社へご相談ください。",
+                isUnread: false,
+                isStarred: false,
+                isTrash: false
+            },
+            {
+                id: 8,
+                title: "大家からの注意喚起",
+                senderCompany: "大家",
+                dateTime: "2026-05-05 20:00",
+                body: "夜間の生活音について、近隣から相談が寄せられています。\n特に深夜帯の洗濯機使用、大きな音でのテレビ視聴、共用廊下での会話は周囲に響きやすいためご注意ください。集合住宅では生活時間が異なる方もいますので、お互いに配慮したご利用をお願いします。",
+                isUnread: true,
+                isStarred: false,
+                isTrash: false
+            },
+            {
+                id: 9,
+                title: "駐輪場利用ルールの変更",
+                senderCompany: "不動産会社",
+                dateTime: "2026-05-04 13:40",
+                body: "駐輪場の利用ルールを一部変更します。\n今後は登録シールのない自転車を長期間放置自転車として確認対象にします。自転車を利用中の方は、管理会社から配布される登録シールを見えやすい位置に貼付してください。\n来客用自転車を一時的に停める場合も、長時間の駐輪はご遠慮ください。",
+                isUnread: false,
+                isStarred: true,
+                isTrash: false
+            },
+            {
+                id: 10,
+                title: "防災設備点検のお知らせ",
+                senderCompany: "管理会社",
+                dateTime: "2026-05-03 09:00",
+                body: "消防設備法定点検を実施します。\n火災報知器、避難はしご、消火器などの点検を予定しています。点検中は警報音の試験が短時間発生する場合があります。室内設備の確認が必要な住戸については、別途日程調整のご連絡を行います。\n安全維持のため、ご理解とご協力をお願いします。",
+                isUnread: false,
+                isStarred: false,
+                isTrash: false
+            }
+        ];
 
         const faqItems = {
             rent: {
@@ -984,6 +1200,103 @@
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const phonePattern = /^0\d{1,4}-?\d{1,4}-?\d{3,4}$/;
         const passwordPattern = /^[A-Za-z0-9]+$/;
+
+        function createNoticePreview(body) {
+            const previewText = body.replace(/\s+/g, " ").slice(0, 72);
+            return previewText + " 続きはこちら>>>";
+        }
+
+        function markNoticeAsRead(notice) {
+            // 詳細を開いたら既読扱いにします。今回はDB保存せず、JS上の状態だけ変えます。
+            notice.isUnread = false;
+        }
+
+        function renderNoticeList() {
+            noticeList.innerHTML = "";
+
+            notices.forEach(function (notice) {
+                if (notice.isTrash) {
+                    return;
+                }
+
+                const card = document.createElement("button");
+                const meta = document.createElement("div");
+                const sender = document.createElement("span");
+                const date = document.createElement("span");
+                const titleRow = document.createElement("div");
+                const title = document.createElement("h3");
+                const star = document.createElement("span");
+                const preview = document.createElement("p");
+
+                card.type = "button";
+                card.className = "card notice-card";
+                meta.className = "notice-meta";
+                sender.className = "notice-sender";
+                date.className = "notice-date";
+                titleRow.className = "notice-title-row";
+                star.className = "notice-star";
+                preview.className = "notice-preview";
+
+                sender.textContent = notice.senderCompany;
+                date.textContent = notice.dateTime;
+                title.textContent = notice.title;
+                star.textContent = notice.isStarred ? "★" : "☆";
+                preview.textContent = createNoticePreview(notice.body);
+
+                if (notice.isUnread) {
+                    const unreadLabel = document.createElement("span");
+                    unreadLabel.className = "unread-label";
+                    unreadLabel.textContent = "未読";
+                    title.appendChild(unreadLabel);
+                }
+
+                meta.appendChild(sender);
+                meta.appendChild(date);
+                titleRow.appendChild(title);
+                titleRow.appendChild(star);
+                card.appendChild(meta);
+                card.appendChild(titleRow);
+                card.appendChild(preview);
+
+                card.addEventListener("click", function () {
+                    showNoticeDetail(notice.id);
+                });
+
+                noticeList.appendChild(card);
+            });
+
+            noticeList.scrollTop = noticeListScrollTop;
+        }
+
+        function showNoticeDetail(noticeId) {
+            const notice = notices.find(function (item) {
+                return item.id === noticeId;
+            });
+
+            if (!notice) {
+                return;
+            }
+
+            noticeListScrollTop = noticeList.scrollTop;
+            markNoticeAsRead(notice);
+
+            noticeDetailSender.textContent = notice.senderCompany;
+            noticeDetailDate.textContent = notice.dateTime;
+            noticeDetailStar.textContent = notice.isStarred ? "★" : "☆";
+            noticeDetailTitle.textContent = notice.title;
+            noticeDetailBody.textContent = notice.body;
+
+            noticeOverview.classList.add("is-hidden");
+            noticeDetail.classList.add("active");
+            noticeDetailBody.scrollTop = 0;
+        }
+
+        function backToNoticeList() {
+            noticeDetail.classList.remove("active");
+            noticeOverview.classList.remove("is-hidden");
+            renderNoticeList();
+            noticeList.scrollTop = noticeListScrollTop;
+        }
 
         function getScrollTop() {
             return appShell.scrollTop;
@@ -1324,6 +1637,8 @@
         });
 
         resetSettingsForms();
+        renderNoticeList();
+        noticeBackButton.addEventListener("click", backToNoticeList);
     </script>
 </body>
 </html>
