@@ -11,7 +11,9 @@
 
         body {
             margin: 0;
+            height: 100vh;
             min-height: 100vh;
+            overflow: hidden;
             background-color: #f3f5f7;
             color: #1f2937;
             font-family: Arial, sans-serif;
@@ -20,10 +22,26 @@
         .app-shell {
             width: 100%;
             max-width: 480px;
-            min-height: 100vh;
+            height: 100vh;
             margin: 0 auto;
             padding: 20px 16px 96px;
+            overflow-y: scroll;
             background-color: #f8fafc;
+            scrollbar-gutter: stable;
+        }
+
+        .app-shell::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .app-shell::-webkit-scrollbar-track {
+            background-color: #e5e7eb;
+        }
+
+        .app-shell::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 999px;
+            border: 2px solid #e5e7eb;
         }
 
         .page-header {
@@ -368,6 +386,37 @@
             font-weight: bold;
         }
 
+        .save-button:disabled {
+            cursor: default;
+            opacity: 0.65;
+        }
+
+        .loading-wrap {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+        }
+
+        .loading-wrap.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid #bfdbfe;
+            border-top-color: #2563eb;
+            border-radius: 999px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         .time-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -514,7 +563,7 @@
             .app-shell {
                 margin-top: 24px;
                 margin-bottom: 24px;
-                min-height: calc(100vh - 48px);
+                height: calc(100vh - 48px);
                 border: 1px solid #e5e7eb;
                 border-radius: 8px;
                 box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
@@ -684,6 +733,7 @@
                         <div class="detail-actions">
                             <button type="button" class="back-button" data-back-settings>←</button>
                             <button type="button" class="save-button" id="email-save-button">変更</button>
+                            <div class="loading-wrap" id="email-loading"><span class="spinner"></span></div>
                         </div>
                     </div>
                 </div>
@@ -699,6 +749,7 @@
                         <div class="detail-actions">
                             <button type="button" class="back-button" data-back-settings>←</button>
                             <button type="button" class="save-button" id="phone-save-button">登録</button>
+                            <div class="loading-wrap" id="phone-loading"><span class="spinner"></span></div>
                         </div>
                     </div>
                 </div>
@@ -724,6 +775,7 @@
                         <div class="detail-actions">
                             <button type="button" class="back-button" data-back-settings>←</button>
                             <button type="button" class="save-button" id="password-save-button">変更</button>
+                            <div class="loading-wrap" id="password-loading"><span class="spinner"></span></div>
                         </div>
                     </div>
                 </div>
@@ -743,6 +795,7 @@
                         <div class="detail-actions">
                             <button type="button" class="back-button" data-back-settings>←</button>
                             <button type="button" class="save-button" id="contact-method-save-button">保存</button>
+                            <div class="loading-wrap" id="contact-method-loading"><span class="spinner"></span></div>
                         </div>
                     </div>
                 </div>
@@ -794,6 +847,7 @@
                         <div class="detail-actions">
                             <button type="button" class="back-button" data-back-settings>←</button>
                             <button type="button" class="save-button" id="call-time-save-button">保存</button>
+                            <div class="loading-wrap" id="call-time-loading"><span class="spinner"></span></div>
                         </div>
                     </div>
                 </div>
@@ -809,6 +863,7 @@
                         <div class="detail-actions">
                             <button type="button" class="back-button" data-back-settings>←</button>
                             <button type="button" class="save-button" id="emergency-save-button">保存</button>
+                            <div class="loading-wrap" id="emergency-loading"><span class="spinner"></span></div>
                         </div>
                     </div>
                 </div>
@@ -858,6 +913,7 @@
     <script>
         const navButtons = document.querySelectorAll(".nav-button");
         const tabPanels = document.querySelectorAll(".tab-panel");
+        const appShell = document.querySelector(".app-shell");
         const categoryButtons = document.querySelectorAll(".category-button");
         const faqQuestion = document.getElementById("faq-question");
         const faqAnswer = document.getElementById("faq-answer");
@@ -871,21 +927,32 @@
         const emailInput = document.getElementById("email-input");
         const emailMessage = document.getElementById("email-message");
         const emailSaveButton = document.getElementById("email-save-button");
+        const emailLoading = document.getElementById("email-loading");
         const phoneList = document.getElementById("phone-list");
         const phoneAddButton = document.getElementById("phone-add-button");
         const phoneSaveButton = document.getElementById("phone-save-button");
+        const phoneLoading = document.getElementById("phone-loading");
         const phoneMessage = document.getElementById("phone-message");
         const passwordSaveButton = document.getElementById("password-save-button");
+        const passwordLoading = document.getElementById("password-loading");
         const passwordMessage = document.getElementById("password-message");
         const contactMethodSaveButton = document.getElementById("contact-method-save-button");
+        const contactMethodLoading = document.getElementById("contact-method-loading");
         const contactMethodMessage = document.getElementById("contact-method-message");
         const callTimeSaveButton = document.getElementById("call-time-save-button");
+        const callTimeLoading = document.getElementById("call-time-loading");
         const callTimeMessage = document.getElementById("call-time-message");
         const emergencyList = document.getElementById("emergency-list");
         const emergencyAddButton = document.getElementById("emergency-add-button");
         const emergencySaveButton = document.getElementById("emergency-save-button");
+        const emergencyLoading = document.getElementById("emergency-loading");
         const emergencyMessage = document.getElementById("emergency-message");
         const initialPhoneNumber = "{% if tenant %}{{ tenant.phone_number|escapejs }}{% endif %}";
+        const tabScrollPositions = {};
+        const detailScrollPositions = {};
+        let activeTabName = "contact";
+        let settingsListScrollTop = 0;
+        let activeDetailName = "";
 
         const faqItems = {
             rent: {
@@ -918,10 +985,33 @@
         const phonePattern = /^0\d{1,4}-?\d{1,4}-?\d{3,4}$/;
         const passwordPattern = /^[A-Za-z0-9]+$/;
 
+        function getScrollTop() {
+            return appShell.scrollTop;
+        }
+
+        function setScrollTop(value) {
+            appShell.scrollTop = value || 0;
+        }
+
+        function saveCurrentScrollPosition() {
+            // タブごと、詳細画面ごとに現在のスクロール位置を覚えておきます。
+            if (activeTabName === "settings" && activeDetailName !== "") {
+                detailScrollPositions[activeDetailName] = getScrollTop();
+            } else {
+                tabScrollPositions[activeTabName] = getScrollTop();
+            }
+        }
+
+        function restoreTabScrollPosition(tabName) {
+            setScrollTop(tabScrollPositions[tabName] || 0);
+        }
+
         // 下部ナビゲーションを押したら、同じHTML内の表示エリアだけを切り替えます。
         navButtons.forEach(function (button) {
             button.addEventListener("click", function () {
                 const selectedTab = button.dataset.tab;
+
+                saveCurrentScrollPosition();
 
                 navButtons.forEach(function (navButton) {
                     navButton.classList.toggle("active", navButton === button);
@@ -930,6 +1020,12 @@
                 tabPanels.forEach(function (panel) {
                     panel.classList.toggle("active", panel.id === "tab-" + selectedTab);
                 });
+
+                activeTabName = selectedTab;
+                activeDetailName = "";
+                window.setTimeout(function () {
+                    restoreTabScrollPosition(selectedTab);
+                }, 0);
             });
         });
 
@@ -962,6 +1058,32 @@
             }
         }
 
+        function setLoadingState(button, loadingElement, isLoading) {
+            button.disabled = isLoading;
+            button.hidden = isLoading;
+            loadingElement.classList.toggle("active", isLoading);
+        }
+
+        function resetLoadingStates() {
+            setLoadingState(emailSaveButton, emailLoading, false);
+            setLoadingState(phoneSaveButton, phoneLoading, false);
+            setLoadingState(passwordSaveButton, passwordLoading, false);
+            setLoadingState(contactMethodSaveButton, contactMethodLoading, false);
+            setLoadingState(callTimeSaveButton, callTimeLoading, false);
+            setLoadingState(emergencySaveButton, emergencyLoading, false);
+        }
+
+        function showAcceptedAfterLoading(button, loadingElement, messageElement, successMessage) {
+            // 実際の保存処理の代わりに、少し待ってから受付完了メッセージを出します。
+            setFormMessage(messageElement, "", "");
+            setLoadingState(button, loadingElement, true);
+
+            window.setTimeout(function () {
+                loadingElement.classList.remove("active");
+                setFormMessage(messageElement, successMessage, "success");
+            }, 3500);
+        }
+
         function createPhoneRow(listElement, value) {
             const row = document.createElement("div");
             const input = document.createElement("input");
@@ -986,6 +1108,7 @@
         }
 
         function resetSettingsForms() {
+            resetLoadingStates();
             emailInput.value = "";
             setFormMessage(emailMessage, "", "");
 
@@ -1015,18 +1138,30 @@
         }
 
         function showSettingsList() {
+            if (activeDetailName !== "") {
+                detailScrollPositions[activeDetailName] = getScrollTop();
+            }
             settingsList.classList.remove("is-hidden");
             settingsDetails.forEach(function (detail) {
                 detail.classList.remove("active");
             });
             resetSettingsForms();
+            activeDetailName = "";
+            window.setTimeout(function () {
+                setScrollTop(settingsListScrollTop);
+            }, 0);
         }
 
         function showSettingsDetail(detailName) {
+            settingsListScrollTop = getScrollTop();
             settingsList.classList.add("is-hidden");
             settingsDetails.forEach(function (detail) {
                 detail.classList.toggle("active", detail.id === "detail-" + detailName);
             });
+            activeDetailName = detailName;
+            window.setTimeout(function () {
+                setScrollTop(detailScrollPositions[detailName] || 0);
+            }, 0);
         }
 
         // 設定項目を押したら、一覧を隠して同じHTML内の詳細画面を表示します。
@@ -1058,7 +1193,18 @@
             } else if (!emailPattern.test(value)) {
                 setFormMessage(emailMessage, "メールアドレスの形式が正しくありません。", "error");
             } else {
-                setFormMessage(emailMessage, "メールアドレス変更を受け付けました。", "success");
+                // TODO: DB上の他入居者メールアドレスと重複チェックする。
+                const isDuplicatedEmail = false;
+                if (isDuplicatedEmail) {
+                    setFormMessage(emailMessage, "このメールアドレスは使用できません。", "error");
+                    return;
+                }
+                showAcceptedAfterLoading(
+                    emailSaveButton,
+                    emailLoading,
+                    emailMessage,
+                    "メールアドレス変更を受け付けました。"
+                );
             }
         });
 
@@ -1076,7 +1222,18 @@
             } else if (values.some(function (value) { return !phonePattern.test(value); })) {
                 setFormMessage(phoneMessage, "電話番号の形式が正しくありません。", "error");
             } else {
-                setFormMessage(phoneMessage, "電話番号変更を受け付けました。", "success");
+                // TODO: DB上の他入居者電話番号と重複チェックする。
+                const hasDuplicatedPhone = false;
+                if (hasDuplicatedPhone) {
+                    setFormMessage(phoneMessage, "この電話番号は使用できません。", "error");
+                    return;
+                }
+                showAcceptedAfterLoading(
+                    phoneSaveButton,
+                    phoneLoading,
+                    phoneMessage,
+                    "電話番号変更を受け付けました。"
+                );
             }
         });
 
@@ -1100,7 +1257,13 @@
             } else if (newPassword !== confirmPassword) {
                 setFormMessage(passwordMessage, "パスワードが一致しません。", "error");
             } else {
-                setFormMessage(passwordMessage, "パスワード変更を受け付けました。", "success");
+                // TODO: 現在のパスワードとの一致確認、新パスワードが現在のパスワードと同じ場合は不可、パスワード強度チェック。
+                showAcceptedAfterLoading(
+                    passwordSaveButton,
+                    passwordLoading,
+                    passwordMessage,
+                    "パスワード変更を受け付けました。"
+                );
             }
         });
 
@@ -1112,7 +1275,12 @@
             if (!hasChecked) {
                 setFormMessage(contactMethodMessage, "少なくとも1つはオンにしてください。", "error");
             } else {
-                setFormMessage(contactMethodMessage, "希望連絡方法を受け付けました。", "success");
+                showAcceptedAfterLoading(
+                    contactMethodSaveButton,
+                    contactMethodLoading,
+                    contactMethodMessage,
+                    "希望連絡方法を受け付けました。"
+                );
             }
         });
 
@@ -1125,7 +1293,12 @@
             } else if (Number(endTime) <= Number(startTime)) {
                 setFormMessage(callTimeMessage, "終了時間は開始時間より後にしてください。", "error");
             } else {
-                setFormMessage(callTimeMessage, "電話可能時間帯を受け付けました。", "success");
+                showAcceptedAfterLoading(
+                    callTimeSaveButton,
+                    callTimeLoading,
+                    callTimeMessage,
+                    "電話可能時間帯を受け付けました。"
+                );
             }
         });
 
@@ -1141,7 +1314,12 @@
             if (values.some(function (value) { return !phonePattern.test(value); })) {
                 setFormMessage(emergencyMessage, "電話番号の形式が正しくありません。", "error");
             } else {
-                setFormMessage(emergencyMessage, "緊急連絡先を受け付けました。", "success");
+                showAcceptedAfterLoading(
+                    emergencySaveButton,
+                    emergencyLoading,
+                    emergencyMessage,
+                    "緊急連絡先を受け付けました。"
+                );
             }
         });
 
