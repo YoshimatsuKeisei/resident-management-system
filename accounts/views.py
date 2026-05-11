@@ -5,7 +5,7 @@ from datetime import date
 
 from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import Q
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 from .models import LoginHistory, LoginSession, TenantProfile
 
@@ -76,7 +76,8 @@ def top(request):
             request.session["tenant_id"] = tenant.id
             request.session["login_session_id"] = login_session.id
 
-            context["login_success_message"] = "ログインに成功しました。"
+            # ログインに成功した入居者だけが見られるマイページへ移動します。
+            return redirect("accounts:mypage")
 
     return render(request, template_name, context)
 
@@ -207,14 +208,19 @@ def password_reset(request):
 
 def mypage(request):
     """ログイン後に入居者が見るマイページ画面を表示します。"""
-    # 今回はUIプロトタイプなので、ログイン必須チェックやDB更新は行いません。
-    # セッションにtenant_idがある場合だけ、プロフィール表示用に入居者情報を取得します。
+    # セッションにtenant_idがあるかどうかで、ログイン済みかを簡易的に確認します。
     tenant_id = request.session.get("tenant_id")
-    tenant = None
 
-    if tenant_id is not None:
-        # first()を使うと、該当データがない場合もエラーにならずNoneを返せます。
-        tenant = TenantProfile.objects.filter(id=tenant_id).first()
+    if tenant_id is None:
+        # 未ログインで直接/mypage/へ来た場合は、トップページへ戻します。
+        return redirect("accounts:top")
+
+    # セッションに保存されたIDを使って、ログイン中の入居者情報を取得します。
+    tenant = TenantProfile.objects.filter(id=tenant_id).first()
+
+    if tenant is None:
+        # セッションにIDがあってもDBに入居者がいない場合は、安全のためトップへ戻します。
+        return redirect("accounts:top")
 
     context = {
         "tenant": tenant,
