@@ -216,6 +216,15 @@
             overflow-wrap: anywhere;
         }
 
+        .settings-list.is-hidden,
+        .settings-detail {
+            display: none;
+        }
+
+        .settings-detail.active {
+            display: block;
+        }
+
         .settings-group-title {
             margin: 22px 0 10px;
             font-size: 16px;
@@ -241,6 +250,210 @@
             content: ">";
             color: #9ca3af;
             font-weight: bold;
+        }
+
+        .detail-form {
+            display: grid;
+            gap: 14px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            color: #374151;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            min-height: 46px;
+            padding: 10px 12px;
+            border: 1px solid #cfd6dd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            font: inherit;
+        }
+
+        .current-value {
+            margin: 0;
+            padding: 12px;
+            border-radius: 8px;
+            background-color: #f8fafc;
+            color: #374151;
+            font-size: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .inline-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .dynamic-row,
+        .password-field {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dynamic-row .form-input,
+        .password-field .form-input {
+            padding-right: 46px;
+        }
+
+        .small-icon-button,
+        .toggle-password-button {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #cfd6dd;
+            border-radius: 999px;
+            background-color: #ffffff;
+            color: #374151;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .dynamic-row .small-icon-button,
+        .password-field .toggle-password-button {
+            position: absolute;
+            right: 6px;
+        }
+
+        .add-button {
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 999px;
+            background-color: #dbeafe;
+            color: #2563eb;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .detail-actions {
+            display: grid;
+            grid-template-columns: 52px 1fr;
+            gap: 12px;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .back-button {
+            width: 52px;
+            min-height: 46px;
+            border: 1px solid #cfd6dd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: #2563eb;
+            cursor: pointer;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .save-button {
+            width: 100%;
+            min-height: 46px;
+            border: none;
+            border-radius: 8px;
+            background-color: #2563eb;
+            color: #ffffff;
+            cursor: pointer;
+            font: inherit;
+            font-weight: bold;
+        }
+
+        .time-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .switch-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .switch-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 44px;
+        }
+
+        .switch-row input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .switch-ui {
+            position: relative;
+            flex: 0 0 auto;
+            width: 52px;
+            height: 30px;
+            border-radius: 999px;
+            background-color: #d1d5db;
+            transition: background-color 0.2s ease;
+        }
+
+        .switch-ui::before {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            background-color: #ffffff;
+            content: "";
+            transition: transform 0.2s ease;
+        }
+
+        .switch-row input:checked + .switch-ui {
+            background-color: #2563eb;
+        }
+
+        .switch-row input:checked + .switch-ui::before {
+            transform: translateX(22px);
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #edf2f7;
+            text-align: left;
+        }
+
+        .history-table th {
+            color: #6b7280;
+            font-weight: bold;
+        }
+
+        .form-message {
+            margin: 0;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1.6;
+        }
+
+        .form-message.error {
+            color: #dc2626;
+        }
+
+        .form-message.success {
+            color: #2563eb;
         }
 
         .status-message,
@@ -400,45 +613,236 @@
             <h2 class="section-title">設定</h2>
             <p class="section-text">各項目はUI確認用です。クリックしても実際の更新処理は行いません。</p>
 
-            <h3 class="settings-group-title">アカウント設定</h3>
-            <div class="card settings-card">
-                <button type="button" class="setting-button">登録メールアドレスの変更</button>
-                <button type="button" class="setting-button">電話番号の追加・変更・削除</button>
-                <button type="button" class="setting-button">パスワード変更</button>
-                <button type="button" class="setting-button">アカウント削除申請</button>
+            <!--
+                TODO:
+                - 言語変更
+                - 文字サイズ変更
+                - ダークモード
+                - 通知設定の本格反映
+                - 登録メールアドレス変更のDB保存
+                - 電話番号の複数登録に対応するDB設計
+                - パスワード変更のDB保存
+                - 緊急連絡先のDB保存
+                - ログイン履歴の詳細表示
+                - 設定変更時の確認メール送信
+            -->
+            <div class="settings-list" id="settings-list">
+                <h3 class="settings-group-title">アカウント設定</h3>
+                <div class="card settings-card">
+                    <button type="button" class="setting-button" data-detail="email">登録メールアドレスの変更</button>
+                    <button type="button" class="setting-button" data-detail="phone">電話番号の追加・変更・削除</button>
+                    <button type="button" class="setting-button" data-detail="password">パスワード変更</button>
+                    <button type="button" class="setting-button" data-detail="todo">アカウント削除申請</button>
+                </div>
+
+                <h3 class="settings-group-title">表示設定</h3>
+                <div class="card settings-card">
+                    <button type="button" class="setting-button" data-detail="todo">言語変更</button>
+                    <button type="button" class="setting-button" data-detail="todo">文字サイズ変更</button>
+                    <button type="button" class="setting-button" data-detail="todo">ダークモード</button>
+                </div>
+
+                <h3 class="settings-group-title">通知設定</h3>
+                <div class="card settings-card">
+                    <button type="button" class="setting-button" data-detail="todo">お知らせ通知</button>
+                    <button type="button" class="setting-button" data-detail="todo">メール通知</button>
+                    <button type="button" class="setting-button" data-detail="todo">SMS通知</button>
+                    <button type="button" class="setting-button" data-detail="todo">メンテナンス通知</button>
+                    <button type="button" class="setting-button" data-detail="todo">支払い・契約更新通知</button>
+                </div>
+
+                <h3 class="settings-group-title">連絡設定</h3>
+                <div class="card settings-card">
+                    <button type="button" class="setting-button" data-detail="contact-method">希望連絡方法</button>
+                    <button type="button" class="setting-button" data-detail="call-time">電話可能時間帯</button>
+                    <button type="button" class="setting-button" data-detail="emergency">緊急連絡先</button>
+                </div>
+
+                <h3 class="settings-group-title">セキュリティ設定</h3>
+                <div class="card settings-card">
+                    <button type="button" class="setting-button" data-detail="login-history">ログイン履歴確認</button>
+                    <button type="button" class="setting-button" data-detail="todo">端末管理</button>
+                    <button type="button" class="setting-button" data-detail="todo">2段階認証 仮</button>
+                </div>
+
+                <p class="status-message" id="settings-status" hidden></p>
             </div>
 
-            <h3 class="settings-group-title">表示設定</h3>
-            <div class="card settings-card">
-                <button type="button" class="setting-button">言語変更</button>
-                <button type="button" class="setting-button">文字サイズ変更</button>
-                <button type="button" class="setting-button">ダークモード</button>
+            <div class="settings-detail" id="detail-email">
+                <div class="card">
+                    <h3 class="section-title">登録メールアドレスの変更</h3>
+                    <div class="detail-form">
+                        <div>
+                            <span class="form-label">現在のメールアドレス</span>
+                            <p class="current-value">{% if tenant %}{{ tenant.email }}{% else %}現在のメールアドレスは取得できません{% endif %}</p>
+                        </div>
+                        <label>
+                            <span class="form-label">変更後のメールアドレス</span>
+                            <input type="email" class="form-input" id="email-input" placeholder="変更後のメールアドレス">
+                        </label>
+                        <p class="form-message" id="email-message"></p>
+                        <div class="detail-actions">
+                            <button type="button" class="back-button" data-back-settings>←</button>
+                            <button type="button" class="save-button" id="email-save-button">変更</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <h3 class="settings-group-title">通知設定</h3>
-            <div class="card settings-card">
-                <button type="button" class="setting-button">お知らせ通知</button>
-                <button type="button" class="setting-button">メール通知</button>
-                <button type="button" class="setting-button">SMS通知</button>
-                <button type="button" class="setting-button">メンテナンス通知</button>
-                <button type="button" class="setting-button">支払い・契約更新通知</button>
+            <div class="settings-detail" id="detail-phone">
+                <div class="card">
+                    <h3 class="section-title">電話番号の追加・変更・削除</h3>
+                    <div class="detail-form">
+                        <div class="inline-list" id="phone-list"></div>
+                        <button type="button" class="add-button" id="phone-add-button">+</button>
+                        <p class="form-message" id="phone-message"></p>
+                        <div class="detail-actions">
+                            <button type="button" class="back-button" data-back-settings>←</button>
+                            <button type="button" class="save-button" id="phone-save-button">登録</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <h3 class="settings-group-title">連絡設定</h3>
-            <div class="card settings-card">
-                <button type="button" class="setting-button">希望連絡方法</button>
-                <button type="button" class="setting-button">電話可能時間帯</button>
-                <button type="button" class="setting-button">緊急連絡先</button>
+            <div class="settings-detail" id="detail-password">
+                <div class="card">
+                    <h3 class="section-title">パスワード変更</h3>
+                    <div class="detail-form">
+                        <div class="password-field">
+                            <input type="password" class="form-input password-input" id="current-password" placeholder="現在のパスワード">
+                            <button type="button" class="toggle-password-button" aria-label="パスワード表示切り替え">◎</button>
+                        </div>
+                        <div class="password-field">
+                            <input type="password" class="form-input password-input" id="new-password" placeholder="変更後のパスワード">
+                            <button type="button" class="toggle-password-button" aria-label="パスワード表示切り替え">◎</button>
+                        </div>
+                        <div class="password-field">
+                            <input type="password" class="form-input password-input" id="confirm-password" placeholder="もう一度入力してください">
+                            <button type="button" class="toggle-password-button" aria-label="パスワード表示切り替え">◎</button>
+                        </div>
+                        <p class="form-message" id="password-message"></p>
+                        <div class="detail-actions">
+                            <button type="button" class="back-button" data-back-settings>←</button>
+                            <button type="button" class="save-button" id="password-save-button">変更</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <h3 class="settings-group-title">セキュリティ設定</h3>
-            <div class="card settings-card">
-                <button type="button" class="setting-button">ログイン履歴確認</button>
-                <button type="button" class="setting-button">端末管理</button>
-                <button type="button" class="setting-button">2段階認証 仮</button>
+            <div class="settings-detail" id="detail-contact-method">
+                <div class="card">
+                    <h3 class="section-title">希望連絡方法</h3>
+                    <div class="detail-form">
+                        <div class="switch-list">
+                            <label class="switch-row">電話<input type="checkbox" class="contact-switch" checked><span class="switch-ui"></span></label>
+                            <label class="switch-row">アプリ内お知らせ<input type="checkbox" class="contact-switch" checked><span class="switch-ui"></span></label>
+                            <label class="switch-row">登録済みメール<input type="checkbox" class="contact-switch" checked><span class="switch-ui"></span></label>
+                            <label class="switch-row">SMS<input type="checkbox" class="contact-switch"><span class="switch-ui"></span></label>
+                        </div>
+                        <p class="form-message" id="contact-method-message"></p>
+                        <div class="detail-actions">
+                            <button type="button" class="back-button" data-back-settings>←</button>
+                            <button type="button" class="save-button" id="contact-method-save-button">保存</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <p class="status-message" id="settings-status" hidden></p>
+            <div class="settings-detail" id="detail-call-time">
+                <div class="card">
+                    <h3 class="section-title">電話可能時間帯</h3>
+                    <div class="detail-form">
+                        <div class="time-grid">
+                            <label>
+                                <span class="form-label">開始時間</span>
+                                <select class="form-select" id="start-time">
+                                    <option value="">選択してください</option>
+                                    <option value="9">09:00</option>
+                                    <option value="10">10:00</option>
+                                    <option value="11">11:00</option>
+                                    <option value="12">12:00</option>
+                                    <option value="13">13:00</option>
+                                    <option value="14">14:00</option>
+                                    <option value="15">15:00</option>
+                                    <option value="16">16:00</option>
+                                    <option value="17">17:00</option>
+                                    <option value="18">18:00</option>
+                                    <option value="19">19:00</option>
+                                    <option value="20">20:00</option>
+                                </select>
+                            </label>
+                            <label>
+                                <span class="form-label">終了時間</span>
+                                <select class="form-select" id="end-time">
+                                    <option value="">選択してください</option>
+                                    <option value="9">09:00</option>
+                                    <option value="10">10:00</option>
+                                    <option value="11">11:00</option>
+                                    <option value="12">12:00</option>
+                                    <option value="13">13:00</option>
+                                    <option value="14">14:00</option>
+                                    <option value="15">15:00</option>
+                                    <option value="16">16:00</option>
+                                    <option value="17">17:00</option>
+                                    <option value="18">18:00</option>
+                                    <option value="19">19:00</option>
+                                    <option value="20">20:00</option>
+                                </select>
+                            </label>
+                        </div>
+                        <p class="form-message" id="call-time-message"></p>
+                        <div class="detail-actions">
+                            <button type="button" class="back-button" data-back-settings>←</button>
+                            <button type="button" class="save-button" id="call-time-save-button">保存</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-detail" id="detail-emergency">
+                <div class="card">
+                    <h3 class="section-title">緊急連絡先</h3>
+                    <div class="detail-form">
+                        <div class="inline-list" id="emergency-list"></div>
+                        <button type="button" class="add-button" id="emergency-add-button">+</button>
+                        <p class="form-message" id="emergency-message"></p>
+                        <div class="detail-actions">
+                            <button type="button" class="back-button" data-back-settings>←</button>
+                            <button type="button" class="save-button" id="emergency-save-button">保存</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-detail" id="detail-login-history">
+                <div class="card">
+                    <h3 class="section-title">ログイン履歴</h3>
+                    {% if login_histories %}
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>日時</th>
+                                    <th>ログの種類</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for history in login_histories %}
+                                    <tr>
+                                        <td>{{ history.occurred_at|date:"Y-m-d-H:i" }}</td>
+                                        <td>{{ history.event_type }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p class="section-text">ログイン履歴はまだありません。</p>
+                    {% endif %}
+                    <div class="detail-actions">
+                        <button type="button" class="back-button" data-back-settings>←</button>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
         </section>
     </main>
 
@@ -461,6 +865,27 @@
         const contactStatus = document.getElementById("contact-status");
         const settingButtons = document.querySelectorAll(".setting-button");
         const settingsStatus = document.getElementById("settings-status");
+        const settingsList = document.getElementById("settings-list");
+        const settingsDetails = document.querySelectorAll(".settings-detail");
+        const backSettingButtons = document.querySelectorAll("[data-back-settings]");
+        const emailInput = document.getElementById("email-input");
+        const emailMessage = document.getElementById("email-message");
+        const emailSaveButton = document.getElementById("email-save-button");
+        const phoneList = document.getElementById("phone-list");
+        const phoneAddButton = document.getElementById("phone-add-button");
+        const phoneSaveButton = document.getElementById("phone-save-button");
+        const phoneMessage = document.getElementById("phone-message");
+        const passwordSaveButton = document.getElementById("password-save-button");
+        const passwordMessage = document.getElementById("password-message");
+        const contactMethodSaveButton = document.getElementById("contact-method-save-button");
+        const contactMethodMessage = document.getElementById("contact-method-message");
+        const callTimeSaveButton = document.getElementById("call-time-save-button");
+        const callTimeMessage = document.getElementById("call-time-message");
+        const emergencyList = document.getElementById("emergency-list");
+        const emergencyAddButton = document.getElementById("emergency-add-button");
+        const emergencySaveButton = document.getElementById("emergency-save-button");
+        const emergencyMessage = document.getElementById("emergency-message");
+        const initialPhoneNumber = "{% if tenant %}{{ tenant.phone_number|escapejs }}{% endif %}";
 
         const faqItems = {
             rent: {
@@ -488,6 +913,10 @@
                 answer: "迷った場合はその他を選び、内容を自由入力欄に記入する想定です。"
             }
         };
+
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phonePattern = /^0\d{1,4}-?\d{1,4}-?\d{3,4}$/;
+        const passwordPattern = /^[A-Za-z0-9]+$/;
 
         // 下部ナビゲーションを押したら、同じHTML内の表示エリアだけを切り替えます。
         navButtons.forEach(function (button) {
@@ -525,13 +954,198 @@
             contactStatus.textContent = "メッセージ送信を受け付けました。";
         });
 
-        // 設定項目は将来の実装予定なので、今は仮メッセージだけ表示します。
+        function setFormMessage(element, message, type) {
+            element.textContent = message;
+            element.classList.remove("error", "success");
+            if (message !== "") {
+                element.classList.add(type);
+            }
+        }
+
+        function createPhoneRow(listElement, value) {
+            const row = document.createElement("div");
+            const input = document.createElement("input");
+            const removeButton = document.createElement("button");
+
+            row.className = "dynamic-row";
+            input.type = "tel";
+            input.className = "form-input";
+            input.placeholder = "電話番号";
+            input.value = value || "";
+            removeButton.type = "button";
+            removeButton.className = "small-icon-button";
+            removeButton.textContent = "×";
+
+            removeButton.addEventListener("click", function () {
+                row.remove();
+            });
+
+            row.appendChild(input);
+            row.appendChild(removeButton);
+            listElement.appendChild(row);
+        }
+
+        function resetSettingsForms() {
+            emailInput.value = "";
+            setFormMessage(emailMessage, "", "");
+
+            phoneList.innerHTML = "";
+            if (initialPhoneNumber !== "") {
+                createPhoneRow(phoneList, initialPhoneNumber);
+            }
+            setFormMessage(phoneMessage, "", "");
+
+            document.querySelectorAll(".password-input").forEach(function (input) {
+                input.value = "";
+                input.type = "password";
+            });
+            setFormMessage(passwordMessage, "", "");
+
+            document.querySelectorAll(".contact-switch").forEach(function (switchInput, index) {
+                switchInput.checked = index < 3;
+            });
+            setFormMessage(contactMethodMessage, "", "");
+
+            document.getElementById("start-time").value = "";
+            document.getElementById("end-time").value = "";
+            setFormMessage(callTimeMessage, "", "");
+
+            emergencyList.innerHTML = "";
+            setFormMessage(emergencyMessage, "", "");
+        }
+
+        function showSettingsList() {
+            settingsList.classList.remove("is-hidden");
+            settingsDetails.forEach(function (detail) {
+                detail.classList.remove("active");
+            });
+            resetSettingsForms();
+        }
+
+        function showSettingsDetail(detailName) {
+            settingsList.classList.add("is-hidden");
+            settingsDetails.forEach(function (detail) {
+                detail.classList.toggle("active", detail.id === "detail-" + detailName);
+            });
+        }
+
+        // 設定項目を押したら、一覧を隠して同じHTML内の詳細画面を表示します。
         settingButtons.forEach(function (button) {
             button.addEventListener("click", function () {
-                settingsStatus.hidden = false;
-                settingsStatus.textContent = "この設定は後で実装します。";
+                const detailName = button.dataset.detail;
+
+                if (detailName === "todo") {
+                    settingsStatus.hidden = false;
+                    settingsStatus.textContent = "この設定は後で実装します。";
+                    return;
+                }
+
+                settingsStatus.hidden = true;
+                showSettingsDetail(detailName);
             });
         });
+
+        // 戻る矢印では保存せず、入力内容を初期状態へ戻して一覧に戻ります。
+        backSettingButtons.forEach(function (button) {
+            button.addEventListener("click", showSettingsList);
+        });
+
+        emailSaveButton.addEventListener("click", function () {
+            const value = emailInput.value.trim();
+
+            if (value === "") {
+                setFormMessage(emailMessage, "メールアドレスを入力してください。", "error");
+            } else if (!emailPattern.test(value)) {
+                setFormMessage(emailMessage, "メールアドレスの形式が正しくありません。", "error");
+            } else {
+                setFormMessage(emailMessage, "メールアドレス変更を受け付けました。", "success");
+            }
+        });
+
+        phoneAddButton.addEventListener("click", function () {
+            createPhoneRow(phoneList, "");
+        });
+
+        phoneSaveButton.addEventListener("click", function () {
+            const values = Array.from(phoneList.querySelectorAll("input"))
+                .map(function (input) { return input.value.trim(); })
+                .filter(function (value) { return value !== ""; });
+
+            if (values.length === 0) {
+                setFormMessage(phoneMessage, "必ず1個以上電話番号を登録してください。", "error");
+            } else if (values.some(function (value) { return !phonePattern.test(value); })) {
+                setFormMessage(phoneMessage, "電話番号の形式が正しくありません。", "error");
+            } else {
+                setFormMessage(phoneMessage, "電話番号変更を受け付けました。", "success");
+            }
+        });
+
+        // 目のイラスト風ボタンで、パスワード欄の表示/非表示を切り替えます。
+        document.querySelectorAll(".toggle-password-button").forEach(function (button) {
+            button.addEventListener("click", function () {
+                const input = button.parentElement.querySelector(".password-input");
+                input.type = input.type === "password" ? "text" : "password";
+            });
+        });
+
+        passwordSaveButton.addEventListener("click", function () {
+            const currentPassword = document.getElementById("current-password").value;
+            const newPassword = document.getElementById("new-password").value;
+            const confirmPassword = document.getElementById("confirm-password").value;
+
+            if (currentPassword === "" || newPassword === "" || confirmPassword === "") {
+                setFormMessage(passwordMessage, "入力していない項目があります。", "error");
+            } else if (!passwordPattern.test(newPassword)) {
+                setFormMessage(passwordMessage, "形式が違います。半角英数字のみの入力です。", "error");
+            } else if (newPassword !== confirmPassword) {
+                setFormMessage(passwordMessage, "パスワードが一致しません。", "error");
+            } else {
+                setFormMessage(passwordMessage, "パスワード変更を受け付けました。", "success");
+            }
+        });
+
+        contactMethodSaveButton.addEventListener("click", function () {
+            const hasChecked = Array.from(document.querySelectorAll(".contact-switch")).some(function (switchInput) {
+                return switchInput.checked;
+            });
+
+            if (!hasChecked) {
+                setFormMessage(contactMethodMessage, "少なくとも1つはオンにしてください。", "error");
+            } else {
+                setFormMessage(contactMethodMessage, "希望連絡方法を受け付けました。", "success");
+            }
+        });
+
+        callTimeSaveButton.addEventListener("click", function () {
+            const startTime = document.getElementById("start-time").value;
+            const endTime = document.getElementById("end-time").value;
+
+            if (startTime === "" || endTime === "") {
+                setFormMessage(callTimeMessage, "開始時間と終了時間を選択してください。", "error");
+            } else if (Number(endTime) <= Number(startTime)) {
+                setFormMessage(callTimeMessage, "終了時間は開始時間より後にしてください。", "error");
+            } else {
+                setFormMessage(callTimeMessage, "電話可能時間帯を受け付けました。", "success");
+            }
+        });
+
+        emergencyAddButton.addEventListener("click", function () {
+            createPhoneRow(emergencyList, "");
+        });
+
+        emergencySaveButton.addEventListener("click", function () {
+            const values = Array.from(emergencyList.querySelectorAll("input"))
+                .map(function (input) { return input.value.trim(); })
+                .filter(function (value) { return value !== ""; });
+
+            if (values.some(function (value) { return !phonePattern.test(value); })) {
+                setFormMessage(emergencyMessage, "電話番号の形式が正しくありません。", "error");
+            } else {
+                setFormMessage(emergencyMessage, "緊急連絡先を受け付けました。", "success");
+            }
+        });
+
+        resetSettingsForms();
     </script>
 </body>
 </html>
