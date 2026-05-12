@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不動産会社メッセージ送信</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background-color: #f3f5f7;
+            color: #1f2937;
+            font-family: Arial, sans-serif;
+        }
+
+        .page-shell {
+            width: min(920px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 32px 0;
+        }
+
+        .page-title {
+            margin: 0 0 20px;
+            font-size: 28px;
+        }
+
+        .message-form {
+            display: grid;
+            gap: 18px;
+            padding: 24px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .form-label {
+            display: grid;
+            gap: 8px;
+            color: #374151;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .form-label.full {
+            grid-column: 1 / -1;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            min-height: 46px;
+            padding: 10px 12px;
+            border: 1px solid #cfd6dd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: #1f2937;
+            font: inherit;
+        }
+
+        textarea {
+            min-height: 180px;
+            resize: vertical;
+        }
+
+        .dummy-target {
+            min-height: 46px;
+            padding: 12px;
+            border: 1px solid #cfd6dd;
+            border-radius: 8px;
+            background-color: #f8fafc;
+            color: #4b5563;
+            font-weight: normal;
+        }
+
+        .form-message {
+            margin: 0;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1.6;
+        }
+
+        .form-message.error {
+            color: #dc2626;
+        }
+
+        .form-message.success {
+            color: #2563eb;
+        }
+
+        .submit-button {
+            justify-self: start;
+            min-height: 46px;
+            padding: 0 20px;
+            border: none;
+            border-radius: 8px;
+            background-color: #2563eb;
+            color: #ffffff;
+            cursor: pointer;
+            font: inherit;
+            font-weight: bold;
+        }
+
+        @media (max-width: 720px) {
+            .page-shell {
+                width: min(100% - 24px, 560px);
+                padding: 20px 0;
+            }
+
+            .message-form {
+                padding: 18px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page-shell">
+        <h1 class="page-title">不動産会社メッセージ送信</h1>
+
+        <form class="message-form" method="post">
+            {% csrf_token %}
+
+            {% if error_message %}
+                <p class="form-message error">{{ error_message }}</p>
+            {% endif %}
+            {% if success_message %}
+                <p class="form-message success">{{ success_message }}</p>
+            {% endif %}
+
+            <div class="form-grid">
+                <label class="form-label">
+                    対象者の絞り込み種別
+                    <select name="target_filter_type" id="target-filter-type">
+                        <option value="all" {% if target_filter_type == "all" %}selected{% endif %}>全て</option>
+                        <option value="apartment" {% if target_filter_type == "apartment" %}selected{% endif %}>アパートごと</option>
+                        <option value="group" {% if target_filter_type == "group" %}selected{% endif %}>対象グループごと</option>
+                        <option value="personal" {% if target_filter_type == "personal" %}selected{% endif %}>特定の個人</option>
+                    </select>
+                </label>
+
+                <label class="form-label" id="dummy-target-wrap">
+                    絞り込み値
+                    <select id="dummy-target-select">
+                        <option value="">全て</option>
+                    </select>
+                </label>
+
+                <label class="form-label" id="tenant-target-wrap" hidden>
+                    送信先の入居者
+                    <select name="selected_tenant_id" id="selected-tenant-id">
+                        <option value="">選択してください</option>
+                        {% for tenant in tenants %}
+                            <option value="{{ tenant.id }}" {% if selected_tenant_id == tenant.id|stringformat:"s" %}selected{% endif %}>
+                                {{ tenant.tenant_name }}{% if tenant.building_name %}（{{ tenant.building_name }}）{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label class="form-label full">
+                    件名
+                    <input type="text" name="subject" value="{{ subject }}" autocomplete="off">
+                </label>
+
+                <label class="form-label full">
+                    メッセージ本文
+                    <textarea name="body">{{ body }}</textarea>
+                </label>
+            </div>
+
+            <button type="submit" class="submit-button">送信</button>
+        </form>
+    </main>
+
+    <script>
+        const targetFilterType = document.getElementById("target-filter-type");
+        const dummyTargetWrap = document.getElementById("dummy-target-wrap");
+        const dummyTargetSelect = document.getElementById("dummy-target-select");
+        const tenantTargetWrap = document.getElementById("tenant-target-wrap");
+
+        const dummyOptions = {
+            all: [["", "追加選択なし"]],
+            apartment: [["sample-apartment-1", "サンプルアパートA"], ["sample-apartment-2", "サンプルアパートB"]],
+            group: [["tenant", "入居者"], ["management-company", "管理会社"], ["guarantee-company", "保証会社"], ["owner", "大家"]]
+        };
+
+        function updateTargetValueArea() {
+            const selectedType = targetFilterType.value;
+            const isPersonal = selectedType === "personal";
+            tenantTargetWrap.hidden = !isPersonal;
+            dummyTargetWrap.hidden = isPersonal;
+            dummyTargetSelect.innerHTML = "";
+
+            (dummyOptions[selectedType] || dummyOptions.all).forEach(function (option) {
+                const optionElement = document.createElement("option");
+                optionElement.value = option[0];
+                optionElement.textContent = option[1];
+                dummyTargetSelect.appendChild(optionElement);
+            });
+        }
+
+        targetFilterType.addEventListener("change", updateTargetValueArea);
+        updateTargetValueArea();
+    </script>
+</body>
+</html>

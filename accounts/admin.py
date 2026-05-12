@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import LoginHistory, LoginSession, TenantProfile
+from .models import LoginHistory, LoginSession, TenantNotice, TenantProfile
 
 
 @admin.register(TenantProfile)
@@ -29,3 +29,18 @@ class LoginSessionAdmin(admin.ModelAdmin):
 class LoginHistoryAdmin(admin.ModelAdmin):
     list_display = ("id", "login_session", "tenant", "event_type", "occurred_at")
     list_filter = ("event_type",)
+
+
+@admin.register(TenantNotice)
+class TenantNoticeAdmin(admin.ModelAdmin):
+    list_display = (
+        "sender_company",
+        "recipient_tenant",
+        "subject",
+        "created_at",
+        "is_unread",
+        "is_starred",
+        "is_trash",
+    )
+    list_filter = ("sender_company", "target_filter_type", "is_unread", "is_starred", "is_trash")
+    search_fields = ("subject", "body", "recipient_tenant__tenant_name")

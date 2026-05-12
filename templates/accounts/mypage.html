@@ -1256,6 +1256,7 @@
         </div>
     </nav>
 
+    {{ notices|json_script:"db-notices-data" }}
     <script>
         const navButtons = document.querySelectorAll(".nav-button");
         const tabPanels = document.querySelectorAll(".tab-panel");
@@ -1326,7 +1327,9 @@
         let currentNoticeDetailId = null;
         let isTrashSelectMode = false;
 
-        const notices = [
+        const dbNoticesElement = document.getElementById("db-notices-data");
+        const dbNotices = dbNoticesElement ? JSON.parse(dbNoticesElement.textContent) : [];
+        const dummyNotices = [
             {
                 id: 1,
                 title: "設備点検のお知らせ",
@@ -1428,6 +1431,7 @@
                 isTrash: false
             }
         ];
+        const notices = dbNotices.concat(dummyNotices);
 
         const faqItems = {
             rent: {
@@ -1574,6 +1578,15 @@
                 period: [["week", "1週間以内"], ["month", "1か月以内"], ["three-months", "3か月以内"], ["custom", "期間指定"]],
                 read: [["unread", "未読のみ"], ["read", "既読のみ"]]
             };
+
+            if (noticeFilterType.value === "company") {
+                const companyNames = Array.from(new Set(notices.map(function (notice) {
+                    return notice.senderCompany;
+                })));
+                optionGroups.company = companyNames.map(function (companyName) {
+                    return [companyName, companyName];
+                });
+            }
 
             const options = optionGroups[noticeFilterType.value];
             noticeFilterValue.innerHTML = "";

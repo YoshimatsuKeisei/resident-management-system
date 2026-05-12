@@ -6,8 +6,9 @@ from datetime import date
 from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import Q
 from django.shortcuts import redirect, render
+from django.utils import timezone
 
-from .models import LoginHistory, LoginSession, TenantProfile
+from .models import LoginHistory, LoginSession, TenantNotice, TenantProfile
 
 
 LOGIN_ERROR_MESSAGE = "メールアドレスまたは電話番号、パスワードが異なります。"
@@ -226,12 +227,102 @@ def mypage(request):
     # セッションIDや入居者IDは画面に出さず、日時とログの種類だけを表示します。
     login_histories = LoginHistory.objects.filter(tenant=tenant).order_by("-occurred_at")
 
+    tenant_notices = TenantNotice.objects.filter(
+        recipient_tenant=tenant,
+        is_trash=False,
+    ).order_by("-created_at")
+    notices = [
+        {
+            "id": f"db-{notice.id}",
+            "title": notice.subject,
+            "senderCompany": notice.sender_company,
+            "dateTime": timezone.localtime(notice.created_at).strftime("%Y-%m-%d %H:%M"),
+            "body": notice.body,
+            "isUnread": notice.is_unread,
+            "isStarred": notice.is_starred,
+            "isTrash": notice.is_trash,
+        }
+        for notice in tenant_notices
+    ]
+
     context = {
         "tenant": tenant,
         "login_histories": login_histories,
+        "notices": notices,
     }
 
     return render(request, "accounts/mypage.html", context)
+
+
+def company_message(request):
+    """不動産会社側の簡易メッセージ送信画面を表示し、入居者向けお知らせを保存します。"""
+    tenants = TenantProfile.objects.all().order_by("tenant_name", "id")
+    context = {
+        "tenants": tenants,
+        "target_filter_type": "all",
+        "selected_tenant_id": "",
+        "subject": "",
+        "body": "",
+    }
+
+    if request.method == "POST":
+        target_filter_type = request.POST.get("target_filter_type", "all")
+        selected_tenant_id = request.POST.get("selected_tenant_id", "").strip()
+        subject = request.POST.get("subject", "").strip()
+        body = request.POST.get("body", "").strip()
+
+        context.update(
+            {
+                "target_filter_type": target_filter_type,
+                "selected_tenant_id": selected_tenant_id,
+                "subject": subject,
+                "body": body,
+            }
+        )
+
+        if subject == "":
+            context["error_message"] = "件名を入力してください。"
+            return render(request, "accounts/company_message.html", context)
+
+        if body == "":
+            context["error_message"] = "メッセージ本文を入力してください。"
+            return render(request, "accounts/company_message.html", context)
+
+        if target_filter_type == "personal" and selected_tenant_id == "":
+            context["error_message"] = "送信先の入居者を選択してください。"
+            return render(request, "accounts/company_message.html", context)
+
+        if target_filter_type == "personal":
+            selected_tenant = TenantProfile.objects.filter(id=selected_tenant_id).first()
+            recipients = [selected_tenant] if selected_tenant is not None else []
+            if not recipients:
+                context["error_message"] = "送信先の入居者を選択してください。"
+                return render(request, "accounts/company_message.html", context)
+        else:
+            # TODO: 退去予定日が1週間以内、特定アパート、契約更新間近、保証会社確認が必要な入居者などで絞り込む。
+            recipients = list(tenants)
+
+        for tenant in recipients:
+            TenantNotice.objects.create(
+                sender_company="不動産会社",
+                recipient_tenant=tenant,
+                target_filter_type=target_filter_type,
+                subject=subject,
+                body=body,
+                is_unread=True,
+                is_starred=False,
+                is_trash=False,
+            )
+
+        # TODO: Gmailにもメッセージを送信する。
+        # TODO: スマホ通知を送る。
+        # TODO: 業者側マイページ、業者ごとの権限制御、送信履歴確認を本格実装する。
+        context["success_message"] = "メッセージを送信しました。"
+        context["selected_tenant_id"] = ""
+        context["subject"] = ""
+        context["body"] = ""
+
+    return render(request, "accounts/company_message.html", context)
 
 
 def tenant_list(request):

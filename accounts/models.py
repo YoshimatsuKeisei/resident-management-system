@@ -80,3 +80,28 @@ class LoginHistory(models.Model):
 
     def __str__(self):
         return f"{self.event_type} {self.id}"
+
+
+class TenantNotice(models.Model):
+    sender_company = models.CharField(max_length=50)
+    recipient_tenant = models.ForeignKey(
+        TenantProfile,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notices",
+    )
+    target_filter_type = models.CharField(max_length=50)
+    subject = models.CharField(max_length=200)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_unread = models.BooleanField(default=True)
+    is_starred = models.BooleanField(default=False)
+    is_trash = models.BooleanField(default=False)
+
+    # TODO: 本格運用ではNoticeとNoticeRecipientに分け、本文と入居者ごとの既読・スター・ゴミ箱状態を別管理する。
+    # TODO: Gmail送信、スマホ通知、業者側マイページ、権限制御、送信履歴確認に拡張する。
+    # TODO: 物件、契約状態、退去予定日、保証会社確認状況などで対象者を絞り込めるようにする。
+
+    def __str__(self):
+        return self.subject
