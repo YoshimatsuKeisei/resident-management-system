@@ -55,8 +55,27 @@ class LoginSessionAdmin(admin.ModelAdmin):
 
 @admin.register(LoginHistory)
 class LoginHistoryAdmin(admin.ModelAdmin):
-    list_display = ("id", "login_session", "tenant", "event_type", "occurred_at")
+    list_display = (
+        "id",
+        "login_session_id_display",
+        "tenant_id_display",
+        "occurred_at",
+        "event_type",
+        "remarks",
+    )
     list_filter = ("event_type",)
+
+    @admin.display(description="ログ履歴ID")
+    def id(self, obj):
+        return obj.pk
+
+    @admin.display(description="ログインセッションID")
+    def login_session_id_display(self, obj):
+        return obj.login_session.id
+
+    @admin.display(description="入居者ID")
+    def tenant_id_display(self, obj):
+        return obj.tenant.id
 
 
 @admin.register(TenantNotice)

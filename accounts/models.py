@@ -68,9 +68,18 @@ class LoginHistory(models.Model):
     EVENT_TYPE_OUT = "OUT"
 
     # event_typeに入れられる値をINとOUTだけに制限します。
+    EVENT_TYPE_TEL = "TEL"
+    EVENT_TYPE_MAIL = "MAIL"
+    EVENT_TYPE_PASS = "PASS"
+    EVENT_TYPE_EMERGENCY = "EMG"
+
     EVENT_TYPE_CHOICES = [
-        (EVENT_TYPE_IN, "IN"),
-        (EVENT_TYPE_OUT, "OUT"),
+        (EVENT_TYPE_IN, "ログイン"),
+        (EVENT_TYPE_OUT, "ログアウト"),
+        (EVENT_TYPE_TEL, "電話番号"),
+        (EVENT_TYPE_MAIL, "メールアドレス"),
+        (EVENT_TYPE_PASS, "パスワード"),
+        (EVENT_TYPE_EMERGENCY, "緊急連絡先"),
     ]
 
     # どのログインセッションに紐づく履歴かを保存します。
@@ -80,10 +89,12 @@ class LoginHistory(models.Model):
     tenant = models.ForeignKey(TenantProfile, on_delete=models.CASCADE)
 
     # ログインまたはログアウトの種別を保存します。
-    event_type = models.CharField(max_length=3, choices=EVENT_TYPE_CHOICES)
+    event_type = models.CharField(max_length=4, choices=EVENT_TYPE_CHOICES)
 
     # ログインまたはログアウトが発生した日時を自動で保存します。
     occurred_at = models.DateTimeField(auto_now_add=True)
+
+    remarks = models.TextField(blank=True, default="")
 
     def __str__(self):
         return f"{self.event_type} {self.id}"
