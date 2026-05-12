@@ -8,6 +8,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
 from .models import (
@@ -328,6 +329,24 @@ def mypage(request):
         }
         for contact in tenant.emergency_contacts.all().order_by("created_at")
     ]
+    settings_data = {
+        "contact_methods": {
+            "phone": tenant.contact_by_phone,
+            "app": tenant.contact_by_app,
+            "email": tenant.contact_by_email,
+            "sms": tenant.contact_by_sms,
+        },
+        "callable_start_hour": tenant.callable_start_time.hour if tenant.callable_start_time else "",
+        "callable_end_hour": tenant.callable_end_time.hour if tenant.callable_end_time else "",
+    }
+    settings_urls = {
+        "update_email": reverse("accounts:update_email"),
+        "update_phone_numbers": reverse("accounts:update_phone_numbers"),
+        "update_password": reverse("accounts:update_password_from_mypage"),
+        "update_contact_methods": reverse("accounts:update_contact_methods"),
+        "update_callable_time": reverse("accounts:update_callable_time"),
+        "update_emergency_contacts": reverse("accounts:update_emergency_contacts"),
+    }
 
     context = {
         "tenant": tenant,
@@ -335,6 +354,8 @@ def mypage(request):
         "notices": notices,
         "phone_numbers": phone_numbers,
         "emergency_contacts": emergency_contacts,
+        "settings_data": settings_data,
+        "settings_urls": settings_urls,
         "callable_start_hour": tenant.callable_start_time.hour if tenant.callable_start_time else "",
         "callable_end_hour": tenant.callable_end_time.hour if tenant.callable_end_time else "",
     }
