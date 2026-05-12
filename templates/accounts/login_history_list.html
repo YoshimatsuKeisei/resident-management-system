@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ログイン履歴一覧 | 入居者管理システム</title>
+    <title>操作履歴一覧 | 入居者管理システム</title>
     <style>
         body {
             margin: 0;
@@ -43,7 +43,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 760px;
+            min-width: 920px;
         }
 
         th,
@@ -72,13 +72,20 @@
             border-radius: 8px;
             color: #4b5563;
         }
+
+        .remarks-cell {
+            max-width: 320px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
     <main class="page">
         <header class="page-header">
             <h1 class="site-title">入居者管理システム</h1>
-            <h2 class="page-title">ログイン履歴一覧</h2>
+            <h2 class="page-title">操作履歴一覧</h2>
         </header>
 
         {% comment %}
@@ -95,6 +102,7 @@
                             <th>入居者ID</th>
                             <th>日時</th>
                             <th>ログの種類</th>
+                            <th>備考</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -107,7 +115,8 @@
                                 <td>{{ history.login_session.id }}</td>
                                 <td>{{ history.tenant.id }}</td>
                                 <td>{{ history.occurred_at|date:"Y-m-d-H:i" }}</td>
-                                <td>{{ history.event_type }}</td>
+                                <td>{{ history.event_type }}（{{ history.get_event_type_display }}）</td>
+                                <td class="remarks-cell" title="{{ history.remarks|default:'-' }}">{{ history.remarks|default:"-" }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -117,8 +126,13 @@
             {% comment %}
             if文の条件に合わない場合、つまりログイン履歴が0件の場合はこちらを表示します。
             {% endcomment %}
-            <p class="empty-message">ログイン履歴はまだありません。</p>
+            <p class="empty-message">操作履歴はまだありません。</p>
         {% endif %}
     </main>
+    {% comment %}
+    TODO: 備考欄が長い場合に詳細画面で確認できるようにする。
+    TODO: ログ種別で絞り込み検索できるようにする。
+    TODO: SQLを使った管理者向け検索機能を作る。例：滞納者、契約更新が近い入居者、退去予定日が近い入居者、緊急連絡先未登録の入居者。
+    {% endcomment %}
 </body>
 </html>

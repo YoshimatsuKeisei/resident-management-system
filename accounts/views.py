@@ -69,6 +69,37 @@ def get_json_body(request):
         return {}
 
 
+def create_tenant_log(request, tenant, event_type, remarks=""):
+    login_session_id = request.session.get("login_session_id")
+    login_session = LoginSession.objects.filter(id=login_session_id, tenant=tenant).first()
+    if login_session is None:
+        login_session = LoginSession.objects.create(tenant=tenant)
+        request.session["login_session_id"] = login_session.id
+
+    # TODO: 将来的にLoginHistoryではなくActivityLog / TenantActionLogのような操作履歴モデルへ整理する。
+    # TODO: 操作履歴の改ざん防止を考慮し、必要に応じてIPアドレスやUser-Agentも保存する。
+    return LoginHistory.objects.create(
+        login_session=login_session,
+        tenant=tenant,
+        event_type=event_type,
+        remarks=remarks,
+    )
+
+
+def format_phone_numbers_for_log(phone_numbers):
+    return ",".join(phone_numbers) if phone_numbers else "なし"
+
+
+def format_emergency_contacts_for_log(contacts):
+    formatted_contacts = []
+    for contact in contacts:
+        contact_name = contact.get("contact_name") or "氏名未設定"
+        relationship = contact.get("relationship") or "続柄未設定"
+        phone_number = contact.get("phone_number") or "電話番号未設定"
+        formatted_contacts.append(f"{contact_name}-{relationship}-{phone_number}")
+    return ",".join(formatted_contacts) if formatted_contacts else "なし"
+
+
 def top(request):
     """トップページの表示と、ログイン判定を行います。"""
     template_name = "accounts/top.html"
@@ -325,8 +356,10 @@ def update_email(request):
         return json_error("このメールアドレスは使用できません。")
 
     # TODO: メールアドレス変更時に確認メールを送る。
+    old_email = tenant.email
     tenant.email = new_email
     tenant.save(update_fields=["email", "updated_at"])
+    create_tenant_log(request, tenant, LoginHistory.EVENT_TYPE_MAIL, f"{old_email}\u2192{new_email}")
     return json_success("メールアドレスを変更しました。", email=new_email)
 
 
@@ -357,6 +390,15 @@ def update_phone_numbers(request):
         return json_error("この電話番号は使用できません。")
 
     # TODO: 電話番号変更時にSMS認証を行う。
+    old_phone_numbers = list(
+        tenant.phone_numbers.all().order_by("-is_primary", "created_at").values_list(
+            "phone_number",
+            flat=True,
+        )
+    )
+    if not old_phone_numbers and tenant.phone_number:
+        old_phone_numbers = [tenant.phone_number]
+
     TenantPhoneNumber.objects.filter(tenant=tenant).delete()
     for index, phone_number in enumerate(phone_numbers):
         TenantPhoneNumber.objects.create(
@@ -366,6 +408,12 @@ def update_phone_numbers(request):
         )
     tenant.phone_number = phone_numbers[0]
     tenant.save(update_fields=["phone_number", "updated_at"])
+    create_tenant_log(
+        request,
+        tenant,
+        LoginHistory.EVENT_TYPE_TEL,
+        f"{format_phone_numbers_for_log(old_phone_numbers)}\u2192{format_phone_numbers_for_log(phone_numbers)}",
+    )
     return json_success("電話番号を変更しました。", phone_numbers=phone_numbers)
 
 
@@ -391,6 +439,7 @@ def update_password_from_mypage(request):
 
     tenant.password_hash = make_password(new_password)
     tenant.save(update_fields=["password_hash", "updated_at"])
+    create_tenant_log(request, tenant, LoginHistory.EVENT_TYPE_PASS, "\u30d1\u30b9\u30ef\u30fc\u30c9\u304c\u5909\u66f4\u3055\u308c\u307e\u3057\u305f")
     return json_success("パスワードを変更しました。")
 
 
@@ -482,9 +531,25 @@ def update_emergency_contacts(request):
             }
         )
 
+    old_contacts = [
+        {
+            "contact_name": contact.contact_name,
+            "phone_number": contact.phone_number,
+            "relationship": contact.relationship,
+        }
+        for contact in EmergencyContact.objects.filter(tenant=tenant).order_by("created_at")
+    ]
+
     EmergencyContact.objects.filter(tenant=tenant).delete()
     for contact in contacts:
         EmergencyContact.objects.create(tenant=tenant, **contact)
+    create_tenant_log(
+        request,
+        tenant,
+        LoginHistory.EVENT_TYPE_EMERGENCY,
+        f"{format_emergency_contacts_for_log(old_contacts)}\u2192{format_emergency_contacts_for_log(contacts)}",
+    )
+    # TODO: ???????????????????????????????
     return json_success("緊急連絡先を変更しました。", emergency_contacts=contacts)
 
 
