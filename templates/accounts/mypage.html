@@ -390,6 +390,7 @@
             line-height: 1.7;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
         }
 
         .notice-detail {
@@ -1260,6 +1261,8 @@
     {{ notices|json_script:"db-notices-data" }}
     {{ phone_numbers|json_script:"initial-phone-numbers-data" }}
     {{ emergency_contacts|json_script:"initial-emergency-contacts-data" }}
+    {{ settings_data|json_script:"settings-data" }}
+    {{ settings_urls|json_script:"settings-urls" }}
     <script>
         const navButtons = document.querySelectorAll(".nav-button");
         const tabPanels = document.querySelectorAll(".tab-panel");
@@ -1324,16 +1327,20 @@
         const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
         const initialPhoneNumbersElement = document.getElementById("initial-phone-numbers-data");
         const initialEmergencyContactsElement = document.getElementById("initial-emergency-contacts-data");
+        const settingsDataElement = document.getElementById("settings-data");
+        const settingsUrlsElement = document.getElementById("settings-urls");
+        const settingsData = settingsDataElement ? JSON.parse(settingsDataElement.textContent) : {};
+        const settingsUrls = settingsUrlsElement ? JSON.parse(settingsUrlsElement.textContent) : {};
         let currentPhoneNumbers = initialPhoneNumbersElement ? JSON.parse(initialPhoneNumbersElement.textContent) : [];
         let currentEmergencyContacts = initialEmergencyContactsElement ? JSON.parse(initialEmergencyContactsElement.textContent) : [];
-        let currentContactMethods = {
-            phone: {% if tenant.contact_by_phone %}true{% else %}false{% endif %},
-            app: {% if tenant.contact_by_app %}true{% else %}false{% endif %},
-            email: {% if tenant.contact_by_email %}true{% else %}false{% endif %},
-            sms: {% if tenant.contact_by_sms %}true{% else %}false{% endif %}
+        let currentContactMethods = settingsData.contact_methods || {
+            phone: true,
+            app: true,
+            email: true,
+            sms: false
         };
-        let currentCallableStartTime = "{% if callable_start_hour != '' %}{{ callable_start_hour }}{% endif %}";
-        let currentCallableEndTime = "{% if callable_end_hour != '' %}{{ callable_end_hour }}{% endif %}";
+        let currentCallableStartTime = settingsData.callable_start_hour === "" ? "" : String(settingsData.callable_start_hour || "");
+        let currentCallableEndTime = settingsData.callable_end_hour === "" ? "" : String(settingsData.callable_end_hour || "");
         const tabScrollPositions = {};
         const detailScrollPositions = {};
         let activeTabName = "contact";
@@ -2240,7 +2247,7 @@
                     emailSaveButton,
                     emailLoading,
                     emailMessage,
-                    postForm("{% url 'accounts:update_email' %}", formData),
+                    postForm(settingsUrls.update_email, formData),
                     function (data) {
                         currentEmailValue.textContent = data.email;
                         emailInput.value = "";
@@ -2269,7 +2276,7 @@
                     phoneSaveButton,
                     phoneLoading,
                     phoneMessage,
-                    postJson("{% url 'accounts:update_phone_numbers' %}", { phone_numbers: values }),
+                    postJson(settingsUrls.update_phone_numbers, { phone_numbers: values }),
                     function (data) {
                         currentPhoneNumbers = data.phone_numbers || values;
                     }
@@ -2306,7 +2313,7 @@
                     passwordSaveButton,
                     passwordLoading,
                     passwordMessage,
-                    postForm("{% url 'accounts:update_password_from_mypage' %}", formData),
+                    postForm(settingsUrls.update_password, formData),
                     function () {
                         document.querySelectorAll(".password-input").forEach(function (input) {
                             input.value = "";
@@ -2332,7 +2339,7 @@
                     contactMethodSaveButton,
                     contactMethodLoading,
                     contactMethodMessage,
-                    postJson("{% url 'accounts:update_contact_methods' %}", payload),
+                    postJson(settingsUrls.update_contact_methods, payload),
                     function () {
                         currentContactMethods = {
                             phone: payload.contact_by_phone,
@@ -2361,7 +2368,7 @@
                     callTimeSaveButton,
                     callTimeLoading,
                     callTimeMessage,
-                    postForm("{% url 'accounts:update_callable_time' %}", formData),
+                    postForm(settingsUrls.update_callable_time, formData),
                     function (data) {
                         currentCallableStartTime = data.callable_start_time || "";
                         currentCallableEndTime = data.callable_end_time || "";
@@ -2392,7 +2399,7 @@
                     emergencySaveButton,
                     emergencyLoading,
                     emergencyMessage,
-                    postJson("{% url 'accounts:update_emergency_contacts' %}", { emergency_contacts: contacts }),
+                    postJson(settingsUrls.update_emergency_contacts, { emergency_contacts: contacts }),
                     function (data) {
                         currentEmergencyContacts = data.emergency_contacts || contacts;
                     }
