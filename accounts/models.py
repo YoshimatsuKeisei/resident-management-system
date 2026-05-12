@@ -38,6 +38,13 @@ class TenantProfile(models.Model):
     # データが更新された日時を自動で保存します。
     updated_at = models.DateTimeField(auto_now=True)
 
+    contact_by_phone = models.BooleanField(default=True)
+    contact_by_app = models.BooleanField(default=True)
+    contact_by_email = models.BooleanField(default=True)
+    contact_by_sms = models.BooleanField(default=False)
+    callable_start_time = models.TimeField(null=True, blank=True)
+    callable_end_time = models.TimeField(null=True, blank=True)
+
     def __str__(self):
         return self.tenant_name
 
@@ -80,6 +87,41 @@ class LoginHistory(models.Model):
 
     def __str__(self):
         return f"{self.event_type} {self.id}"
+
+
+class TenantPhoneNumber(models.Model):
+    tenant = models.ForeignKey(
+        TenantProfile,
+        on_delete=models.CASCADE,
+        related_name="phone_numbers",
+    )
+    phone_number = models.CharField(max_length=20, unique=True)
+    is_primary = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # TODO: TenantProfile.phone_numberをTenantPhoneNumberに完全移行する。
+    # TODO: 電話番号変更時にSMS認証を行い、連絡設定変更履歴を保存する。
+
+    def __str__(self):
+        return self.phone_number
+
+
+class EmergencyContact(models.Model):
+    tenant = models.ForeignKey(
+        TenantProfile,
+        on_delete=models.CASCADE,
+        related_name="emergency_contacts",
+    )
+    contact_name = models.CharField(max_length=100, blank=True)
+    phone_number = models.CharField(max_length=20)
+    relationship = models.CharField(max_length=50, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # TODO: 緊急連絡先に名前・続柄・優先順位をより詳しく設定する。
+    # TODO: 設定変更後に確認通知を送る。
+
+    def __str__(self):
+        return self.contact_name or self.phone_number
 
 
 class TenantNotice(models.Model):
