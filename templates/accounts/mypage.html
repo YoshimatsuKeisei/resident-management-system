@@ -1069,7 +1069,7 @@
                     <div class="detail-form">
                         <div>
                             <span class="form-label">現在のメールアドレス</span>
-                            <p class="current-value">{% if tenant %}{{ tenant.email }}{% else %}現在のメールアドレスは取得できません{% endif %}</p>
+                            <p class="current-value" id="current-email-value">{% if tenant %}{{ tenant.email }}{% else %}現在のメールアドレスは取得できません{% endif %}</p>
                         </div>
                         <label>
                             <span class="form-label">変更後のメールアドレス</span>
@@ -1132,10 +1132,10 @@
                     <h3 class="section-title">希望連絡方法</h3>
                     <div class="detail-form">
                         <div class="switch-list">
-                            <label class="switch-row">電話<input type="checkbox" class="contact-switch" checked><span class="switch-ui"></span></label>
-                            <label class="switch-row">アプリ内お知らせ<input type="checkbox" class="contact-switch" checked><span class="switch-ui"></span></label>
-                            <label class="switch-row">登録済みメール<input type="checkbox" class="contact-switch" checked><span class="switch-ui"></span></label>
-                            <label class="switch-row">SMS<input type="checkbox" class="contact-switch"><span class="switch-ui"></span></label>
+                            <label class="switch-row">電話<input type="checkbox" class="contact-switch" data-contact-method="phone" {% if tenant.contact_by_phone %}checked{% endif %}><span class="switch-ui"></span></label>
+                            <label class="switch-row">アプリ内お知らせ<input type="checkbox" class="contact-switch" data-contact-method="app" {% if tenant.contact_by_app %}checked{% endif %}><span class="switch-ui"></span></label>
+                            <label class="switch-row">登録済みメール<input type="checkbox" class="contact-switch" data-contact-method="email" {% if tenant.contact_by_email %}checked{% endif %}><span class="switch-ui"></span></label>
+                            <label class="switch-row">SMS<input type="checkbox" class="contact-switch" data-contact-method="sms" {% if tenant.contact_by_sms %}checked{% endif %}><span class="switch-ui"></span></label>
                         </div>
                         <p class="form-message" id="contact-method-message"></p>
                         <div class="detail-actions">
@@ -1156,36 +1156,36 @@
                                 <span class="form-label">開始時間</span>
                                 <select class="form-select" id="start-time">
                                     <option value="">選択してください</option>
-                                    <option value="9">09:00</option>
-                                    <option value="10">10:00</option>
-                                    <option value="11">11:00</option>
-                                    <option value="12">12:00</option>
-                                    <option value="13">13:00</option>
-                                    <option value="14">14:00</option>
-                                    <option value="15">15:00</option>
-                                    <option value="16">16:00</option>
-                                    <option value="17">17:00</option>
-                                    <option value="18">18:00</option>
-                                    <option value="19">19:00</option>
-                                    <option value="20">20:00</option>
+                                    <option value="9" {% if callable_start_hour == 9 %}selected{% endif %}>09:00</option>
+                                    <option value="10" {% if callable_start_hour == 10 %}selected{% endif %}>10:00</option>
+                                    <option value="11" {% if callable_start_hour == 11 %}selected{% endif %}>11:00</option>
+                                    <option value="12" {% if callable_start_hour == 12 %}selected{% endif %}>12:00</option>
+                                    <option value="13" {% if callable_start_hour == 13 %}selected{% endif %}>13:00</option>
+                                    <option value="14" {% if callable_start_hour == 14 %}selected{% endif %}>14:00</option>
+                                    <option value="15" {% if callable_start_hour == 15 %}selected{% endif %}>15:00</option>
+                                    <option value="16" {% if callable_start_hour == 16 %}selected{% endif %}>16:00</option>
+                                    <option value="17" {% if callable_start_hour == 17 %}selected{% endif %}>17:00</option>
+                                    <option value="18" {% if callable_start_hour == 18 %}selected{% endif %}>18:00</option>
+                                    <option value="19" {% if callable_start_hour == 19 %}selected{% endif %}>19:00</option>
+                                    <option value="20" {% if callable_start_hour == 20 %}selected{% endif %}>20:00</option>
                                 </select>
                             </label>
                             <label>
                                 <span class="form-label">終了時間</span>
                                 <select class="form-select" id="end-time">
                                     <option value="">選択してください</option>
-                                    <option value="9">09:00</option>
-                                    <option value="10">10:00</option>
-                                    <option value="11">11:00</option>
-                                    <option value="12">12:00</option>
-                                    <option value="13">13:00</option>
-                                    <option value="14">14:00</option>
-                                    <option value="15">15:00</option>
-                                    <option value="16">16:00</option>
-                                    <option value="17">17:00</option>
-                                    <option value="18">18:00</option>
-                                    <option value="19">19:00</option>
-                                    <option value="20">20:00</option>
+                                    <option value="9" {% if callable_end_hour == 9 %}selected{% endif %}>09:00</option>
+                                    <option value="10" {% if callable_end_hour == 10 %}selected{% endif %}>10:00</option>
+                                    <option value="11" {% if callable_end_hour == 11 %}selected{% endif %}>11:00</option>
+                                    <option value="12" {% if callable_end_hour == 12 %}selected{% endif %}>12:00</option>
+                                    <option value="13" {% if callable_end_hour == 13 %}selected{% endif %}>13:00</option>
+                                    <option value="14" {% if callable_end_hour == 14 %}selected{% endif %}>14:00</option>
+                                    <option value="15" {% if callable_end_hour == 15 %}selected{% endif %}>15:00</option>
+                                    <option value="16" {% if callable_end_hour == 16 %}selected{% endif %}>16:00</option>
+                                    <option value="17" {% if callable_end_hour == 17 %}selected{% endif %}>17:00</option>
+                                    <option value="18" {% if callable_end_hour == 18 %}selected{% endif %}>18:00</option>
+                                    <option value="19" {% if callable_end_hour == 19 %}selected{% endif %}>19:00</option>
+                                    <option value="20" {% if callable_end_hour == 20 %}selected{% endif %}>20:00</option>
                                 </select>
                             </label>
                         </div>
@@ -1256,7 +1256,10 @@
         </div>
     </nav>
 
+    {% csrf_token %}
     {{ notices|json_script:"db-notices-data" }}
+    {{ phone_numbers|json_script:"initial-phone-numbers-data" }}
+    {{ emergency_contacts|json_script:"initial-emergency-contacts-data" }}
     <script>
         const navButtons = document.querySelectorAll(".nav-button");
         const tabPanels = document.querySelectorAll(".tab-panel");
@@ -1294,6 +1297,7 @@
         const settingsList = document.getElementById("settings-list");
         const settingsDetails = document.querySelectorAll(".settings-detail");
         const backSettingButtons = document.querySelectorAll("[data-back-settings]");
+        const currentEmailValue = document.getElementById("current-email-value");
         const emailInput = document.getElementById("email-input");
         const emailMessage = document.getElementById("email-message");
         const emailSaveButton = document.getElementById("email-save-button");
@@ -1317,7 +1321,19 @@
         const emergencySaveButton = document.getElementById("emergency-save-button");
         const emergencyLoading = document.getElementById("emergency-loading");
         const emergencyMessage = document.getElementById("emergency-message");
-        const initialPhoneNumber = "{% if tenant %}{{ tenant.phone_number|escapejs }}{% endif %}";
+        const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+        const initialPhoneNumbersElement = document.getElementById("initial-phone-numbers-data");
+        const initialEmergencyContactsElement = document.getElementById("initial-emergency-contacts-data");
+        let currentPhoneNumbers = initialPhoneNumbersElement ? JSON.parse(initialPhoneNumbersElement.textContent) : [];
+        let currentEmergencyContacts = initialEmergencyContactsElement ? JSON.parse(initialEmergencyContactsElement.textContent) : [];
+        let currentContactMethods = {
+            phone: {% if tenant.contact_by_phone %}true{% else %}false{% endif %},
+            app: {% if tenant.contact_by_app %}true{% else %}false{% endif %},
+            email: {% if tenant.contact_by_email %}true{% else %}false{% endif %},
+            sms: {% if tenant.contact_by_sms %}true{% else %}false{% endif %}
+        };
+        let currentCallableStartTime = "{% if callable_start_hour != '' %}{{ callable_start_hour }}{% endif %}";
+        let currentCallableEndTime = "{% if callable_end_hour != '' %}{{ callable_end_hour }}{% endif %}";
         const tabScrollPositions = {};
         const detailScrollPositions = {};
         let activeTabName = "contact";
@@ -2029,6 +2045,48 @@
             }, 3500);
         }
 
+        function postForm(url, data) {
+            return fetch(url, {
+                method: "POST",
+                headers: { "X-CSRFToken": csrfToken },
+                body: data
+            }).then(function (response) { return response.json(); });
+        }
+
+        function postJson(url, data) {
+            return fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify(data)
+            }).then(function (response) { return response.json(); });
+        }
+
+        function saveWithLoading(button, loadingElement, messageElement, requestPromise, onSuccess) {
+            setFormMessage(messageElement, "", "");
+            setLoadingState(button, loadingElement, true);
+
+            requestPromise
+                .then(function (data) {
+                    if (data.success) {
+                        if (onSuccess) {
+                            onSuccess(data);
+                        }
+                        setFormMessage(messageElement, data.message, "success");
+                    } else {
+                        setFormMessage(messageElement, data.message, "error");
+                    }
+                })
+                .catch(function () {
+                    setFormMessage(messageElement, "\u4fdd\u5b58\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002\u6642\u9593\u3092\u304a\u3044\u3066\u518d\u5ea6\u304a\u8a66\u3057\u304f\u3060\u3055\u3044\u3002", "error");
+                })
+                .finally(function () {
+                    setLoadingState(button, loadingElement, false);
+                });
+        }
+
         function createPhoneRow(listElement, value) {
             const row = document.createElement("div");
             const input = document.createElement("input");
@@ -2052,15 +2110,50 @@
             listElement.appendChild(row);
         }
 
+        function createEmergencyRow(contact) {
+            const row = document.createElement("div");
+            const nameInput = document.createElement("input");
+            const phoneInput = document.createElement("input");
+            const relationshipInput = document.createElement("input");
+            const removeButton = document.createElement("button");
+
+            row.className = "inline-list";
+            nameInput.type = "text";
+            nameInput.className = "form-input emergency-name";
+            nameInput.placeholder = "\u540d\u524d";
+            nameInput.value = contact && contact.contact_name ? contact.contact_name : "";
+            phoneInput.type = "tel";
+            phoneInput.className = "form-input emergency-phone";
+            phoneInput.placeholder = "\u96fb\u8a71\u756a\u53f7";
+            phoneInput.value = contact && contact.phone_number ? contact.phone_number : "";
+            relationshipInput.type = "text";
+            relationshipInput.className = "form-input emergency-relationship";
+            relationshipInput.placeholder = "\u7d9a\u67c4";
+            relationshipInput.value = contact && contact.relationship ? contact.relationship : "";
+            removeButton.type = "button";
+            removeButton.className = "small-icon-button";
+            removeButton.textContent = "\u00d7";
+
+            removeButton.addEventListener("click", function () {
+                row.remove();
+            });
+
+            row.appendChild(nameInput);
+            row.appendChild(phoneInput);
+            row.appendChild(relationshipInput);
+            row.appendChild(removeButton);
+            emergencyList.appendChild(row);
+        }
+
         function resetSettingsForms() {
             resetLoadingStates();
             emailInput.value = "";
             setFormMessage(emailMessage, "", "");
 
             phoneList.innerHTML = "";
-            if (initialPhoneNumber !== "") {
-                createPhoneRow(phoneList, initialPhoneNumber);
-            }
+            currentPhoneNumbers.forEach(function (phoneNumber) {
+                createPhoneRow(phoneList, phoneNumber);
+            });
             setFormMessage(phoneMessage, "", "");
 
             document.querySelectorAll(".password-input").forEach(function (input) {
@@ -2069,16 +2162,19 @@
             });
             setFormMessage(passwordMessage, "", "");
 
-            document.querySelectorAll(".contact-switch").forEach(function (switchInput, index) {
-                switchInput.checked = index < 3;
+            document.querySelectorAll(".contact-switch").forEach(function (switchInput) {
+                switchInput.checked = currentContactMethods[switchInput.dataset.contactMethod];
             });
             setFormMessage(contactMethodMessage, "", "");
 
-            document.getElementById("start-time").value = "";
-            document.getElementById("end-time").value = "";
+            document.getElementById("start-time").value = currentCallableStartTime;
+            document.getElementById("end-time").value = currentCallableEndTime;
             setFormMessage(callTimeMessage, "", "");
 
             emergencyList.innerHTML = "";
+            currentEmergencyContacts.forEach(function (contact) {
+                createEmergencyRow(contact);
+            });
             setFormMessage(emergencyMessage, "", "");
         }
 
@@ -2134,21 +2230,21 @@
             const value = emailInput.value.trim();
 
             if (value === "") {
-                setFormMessage(emailMessage, "メールアドレスを入力してください。", "error");
+                setFormMessage(emailMessage, "\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002", "error");
             } else if (!emailPattern.test(value)) {
-                setFormMessage(emailMessage, "メールアドレスの形式が正しくありません。", "error");
+                setFormMessage(emailMessage, "\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9\u306e\u5f62\u5f0f\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093\u3002", "error");
             } else {
-                // TODO: DB上の他入居者メールアドレスと重複チェックする。
-                const isDuplicatedEmail = false;
-                if (isDuplicatedEmail) {
-                    setFormMessage(emailMessage, "このメールアドレスは使用できません。", "error");
-                    return;
-                }
-                showAcceptedAfterLoading(
+                const formData = new FormData();
+                formData.append("new_email", value);
+                saveWithLoading(
                     emailSaveButton,
                     emailLoading,
                     emailMessage,
-                    "メールアドレス変更を受け付けました。"
+                    postForm("{% url 'accounts:update_email' %}", formData),
+                    function (data) {
+                        currentEmailValue.textContent = data.email;
+                        emailInput.value = "";
+                    }
                 );
             }
         });
@@ -2163,26 +2259,24 @@
                 .filter(function (value) { return value !== ""; });
 
             if (values.length === 0) {
-                setFormMessage(phoneMessage, "必ず1個以上電話番号を登録してください。", "error");
+                setFormMessage(phoneMessage, "\u5fc5\u305a1\u500b\u4ee5\u4e0a\u96fb\u8a71\u756a\u53f7\u3092\u767b\u9332\u3057\u3066\u304f\u3060\u3055\u3044\u3002", "error");
             } else if (values.some(function (value) { return !phonePattern.test(value); })) {
-                setFormMessage(phoneMessage, "電話番号の形式が正しくありません。", "error");
+                setFormMessage(phoneMessage, "\u96fb\u8a71\u756a\u53f7\u306e\u5f62\u5f0f\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093\u3002", "error");
+            } else if (values.length !== Array.from(new Set(values)).length) {
+                setFormMessage(phoneMessage, "\u540c\u3058\u96fb\u8a71\u756a\u53f7\u304c\u5165\u529b\u3055\u308c\u3066\u3044\u307e\u3059\u3002", "error");
             } else {
-                // TODO: DB上の他入居者電話番号と重複チェックする。
-                const hasDuplicatedPhone = false;
-                if (hasDuplicatedPhone) {
-                    setFormMessage(phoneMessage, "この電話番号は使用できません。", "error");
-                    return;
-                }
-                showAcceptedAfterLoading(
+                saveWithLoading(
                     phoneSaveButton,
                     phoneLoading,
                     phoneMessage,
-                    "電話番号変更を受け付けました。"
+                    postJson("{% url 'accounts:update_phone_numbers' %}", { phone_numbers: values }),
+                    function (data) {
+                        currentPhoneNumbers = data.phone_numbers || values;
+                    }
                 );
             }
         });
 
-        // 目のイラスト風ボタンで、パスワード欄の表示/非表示を切り替えます。
         document.querySelectorAll(".toggle-password-button").forEach(function (button) {
             button.addEventListener("click", function () {
                 const input = button.parentElement.querySelector(".password-input");
@@ -2196,35 +2290,57 @@
             const confirmPassword = document.getElementById("confirm-password").value;
 
             if (currentPassword === "" || newPassword === "" || confirmPassword === "") {
-                setFormMessage(passwordMessage, "入力していない項目があります。", "error");
+                setFormMessage(passwordMessage, "\u5165\u529b\u3057\u3066\u3044\u306a\u3044\u9805\u76ee\u304c\u3042\u308a\u307e\u3059\u3002", "error");
             } else if (!passwordPattern.test(newPassword)) {
-                setFormMessage(passwordMessage, "形式が違います。半角英数字のみの入力です。", "error");
+                setFormMessage(passwordMessage, "\u5f62\u5f0f\u304c\u9055\u3044\u307e\u3059\u3002\u534a\u89d2\u82f1\u6570\u5b57\u306e\u307f\u306e\u5165\u529b\u3067\u3059\u3002", "error");
             } else if (newPassword !== confirmPassword) {
-                setFormMessage(passwordMessage, "パスワードが一致しません。", "error");
+                setFormMessage(passwordMessage, "\u30d1\u30b9\u30ef\u30fc\u30c9\u304c\u4e00\u81f4\u3057\u307e\u305b\u3093\u3002", "error");
+            } else if (currentPassword === newPassword) {
+                setFormMessage(passwordMessage, "\u73fe\u5728\u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u3068\u540c\u3058\u3082\u306e\u306f\u4f7f\u7528\u3067\u304d\u307e\u305b\u3093\u3002", "error");
             } else {
-                // TODO: 現在のパスワードとの一致確認、新パスワードが現在のパスワードと同じ場合は不可、パスワード強度チェック。
-                showAcceptedAfterLoading(
+                const formData = new FormData();
+                formData.append("current_password", currentPassword);
+                formData.append("new_password", newPassword);
+                formData.append("new_password_confirm", confirmPassword);
+                saveWithLoading(
                     passwordSaveButton,
                     passwordLoading,
                     passwordMessage,
-                    "パスワード変更を受け付けました。"
+                    postForm("{% url 'accounts:update_password_from_mypage' %}", formData),
+                    function () {
+                        document.querySelectorAll(".password-input").forEach(function (input) {
+                            input.value = "";
+                        });
+                    }
                 );
             }
         });
 
         contactMethodSaveButton.addEventListener("click", function () {
-            const hasChecked = Array.from(document.querySelectorAll(".contact-switch")).some(function (switchInput) {
-                return switchInput.checked;
-            });
+            const switches = Array.from(document.querySelectorAll(".contact-switch"));
+            const payload = {
+                contact_by_phone: switches.find(function (item) { return item.dataset.contactMethod === "phone"; }).checked,
+                contact_by_app: switches.find(function (item) { return item.dataset.contactMethod === "app"; }).checked,
+                contact_by_email: switches.find(function (item) { return item.dataset.contactMethod === "email"; }).checked,
+                contact_by_sms: switches.find(function (item) { return item.dataset.contactMethod === "sms"; }).checked
+            };
 
-            if (!hasChecked) {
-                setFormMessage(contactMethodMessage, "少なくとも1つはオンにしてください。", "error");
+            if (!Object.keys(payload).some(function (key) { return payload[key]; })) {
+                setFormMessage(contactMethodMessage, "\u5c11\u306a\u304f\u3068\u30821\u3064\u306f\u30aa\u30f3\u306b\u3057\u3066\u304f\u3060\u3055\u3044\u3002", "error");
             } else {
-                showAcceptedAfterLoading(
+                saveWithLoading(
                     contactMethodSaveButton,
                     contactMethodLoading,
                     contactMethodMessage,
-                    "希望連絡方法を受け付けました。"
+                    postJson("{% url 'accounts:update_contact_methods' %}", payload),
+                    function () {
+                        currentContactMethods = {
+                            phone: payload.contact_by_phone,
+                            app: payload.contact_by_app,
+                            email: payload.contact_by_email,
+                            sms: payload.contact_by_sms
+                        };
+                    }
                 );
             }
         });
@@ -2233,37 +2349,53 @@
             const startTime = document.getElementById("start-time").value;
             const endTime = document.getElementById("end-time").value;
 
-            if (startTime === "" || endTime === "") {
-                setFormMessage(callTimeMessage, "開始時間と終了時間を選択してください。", "error");
-            } else if (Number(endTime) <= Number(startTime)) {
-                setFormMessage(callTimeMessage, "終了時間は開始時間より後にしてください。", "error");
+            if ((startTime === "") !== (endTime === "")) {
+                setFormMessage(callTimeMessage, "\u958b\u59cb\u6642\u9593\u3068\u7d42\u4e86\u6642\u9593\u3092\u4e21\u65b9\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044\u3002", "error");
+            } else if (startTime !== "" && Number(endTime) <= Number(startTime)) {
+                setFormMessage(callTimeMessage, "\u7d42\u4e86\u6642\u9593\u306f\u958b\u59cb\u6642\u9593\u3088\u308a\u5f8c\u306b\u3057\u3066\u304f\u3060\u3055\u3044\u3002", "error");
             } else {
-                showAcceptedAfterLoading(
+                const formData = new FormData();
+                formData.append("callable_start_time", startTime);
+                formData.append("callable_end_time", endTime);
+                saveWithLoading(
                     callTimeSaveButton,
                     callTimeLoading,
                     callTimeMessage,
-                    "電話可能時間帯を受け付けました。"
+                    postForm("{% url 'accounts:update_callable_time' %}", formData),
+                    function (data) {
+                        currentCallableStartTime = data.callable_start_time || "";
+                        currentCallableEndTime = data.callable_end_time || "";
+                    }
                 );
             }
         });
 
         emergencyAddButton.addEventListener("click", function () {
-            createPhoneRow(emergencyList, "");
+            createEmergencyRow({ contact_name: "", phone_number: "", relationship: "" });
         });
 
         emergencySaveButton.addEventListener("click", function () {
-            const values = Array.from(emergencyList.querySelectorAll("input"))
-                .map(function (input) { return input.value.trim(); })
-                .filter(function (value) { return value !== ""; });
+            const contacts = Array.from(emergencyList.children).map(function (row) {
+                return {
+                    contact_name: row.querySelector(".emergency-name").value.trim(),
+                    phone_number: row.querySelector(".emergency-phone").value.trim(),
+                    relationship: row.querySelector(".emergency-relationship").value.trim()
+                };
+            }).filter(function (contact) {
+                return contact.contact_name !== "" || contact.phone_number !== "" || contact.relationship !== "";
+            });
 
-            if (values.some(function (value) { return !phonePattern.test(value); })) {
-                setFormMessage(emergencyMessage, "電話番号の形式が正しくありません。", "error");
+            if (contacts.some(function (contact) { return contact.phone_number === "" || !phonePattern.test(contact.phone_number); })) {
+                setFormMessage(emergencyMessage, "\u96fb\u8a71\u756a\u53f7\u306e\u5f62\u5f0f\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093\u3002", "error");
             } else {
-                showAcceptedAfterLoading(
+                saveWithLoading(
                     emergencySaveButton,
                     emergencyLoading,
                     emergencyMessage,
-                    "緊急連絡先を受け付けました。"
+                    postJson("{% url 'accounts:update_emergency_contacts' %}", { emergency_contacts: contacts }),
+                    function (data) {
+                        currentEmergencyContacts = data.emergency_contacts || contacts;
+                    }
                 );
             }
         });

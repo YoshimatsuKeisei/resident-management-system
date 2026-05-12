@@ -72,6 +72,58 @@
             border-radius: 8px;
             color: #4b5563;
         }
+
+        .link-button {
+            padding: 0;
+            border: none;
+            background: none;
+            color: #2563eb;
+            cursor: pointer;
+            font: inherit;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .detail-panel {
+            display: none;
+            margin-top: 20px;
+            padding: 18px;
+            border: 1px solid #d8dee6;
+            border-radius: 8px;
+            background-color: #ffffff;
+        }
+
+        .detail-panel.active {
+            display: block;
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .detail-title {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .detail-close {
+            min-height: 36px;
+            padding: 6px 12px;
+            border: 1px solid #cfd6dd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .detail-scroll {
+            max-height: 280px;
+            overflow: auto;
+        }
     </style>
 </head>
 <body>
@@ -100,6 +152,9 @@
                             <th>町名・丁目・番地</th>
                             <th>建物名・部屋番号</th>
                             <th>生年月日</th>
+                            <th>希望連絡方法</th>
+                            <th>電話可能時間帯</th>
+                            <th>緊急連絡先ID</th>
                             <th>登録日時</th>
                         </tr>
                     </thead>
@@ -119,12 +174,80 @@
                                 <td>{{ tenant.street_address }}</td>
                                 <td>{{ tenant.building_name }}</td>
                                 <td>{{ tenant.birth_date }}</td>
+                                <td>
+                                    {% with has_method=False %}
+                                        {% if tenant.contact_by_phone %}電話{% with has_method=True %}{% endwith %}{% endif %}
+                                        {% if tenant.contact_by_app %}{% if tenant.contact_by_phone %} / {% endif %}アプリ{% with has_method=True %}{% endwith %}{% endif %}
+                                        {% if tenant.contact_by_email %}{% if tenant.contact_by_phone or tenant.contact_by_app %} / {% endif %}メール{% with has_method=True %}{% endwith %}{% endif %}
+                                        {% if tenant.contact_by_sms %}{% if tenant.contact_by_phone or tenant.contact_by_app or tenant.contact_by_email %} / {% endif %}SMS{% with has_method=True %}{% endwith %}{% endif %}
+                                        {% if not tenant.contact_by_phone and not tenant.contact_by_app and not tenant.contact_by_email and not tenant.contact_by_sms %}未設定{% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td>
+                                    {% if tenant.callable_start_time and tenant.callable_end_time %}
+                                        {{ tenant.callable_start_time|time:"H:i" }}〜{{ tenant.callable_end_time|time:"H:i" }}
+                                    {% else %}
+                                        未設定
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% with contacts=tenant.emergency_contacts.all %}
+                                        {% if contacts %}
+                                            {% with representative=contacts.0 %}
+                                                <button type="button" class="link-button" data-emergency-panel="emergency-panel-{{ tenant.id }}">
+                                                    ID: {{ representative.id }}{% if contacts|length > 1 %} 他{{ contacts|length|add:"-1" }}件{% endif %}
+                                                </button>
+                                            {% endwith %}
+                                        {% else %}
+                                            未登録
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
                                 <td>{{ tenant.created_at }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+
+            {% for tenant in tenants %}
+                <section class="detail-panel" id="emergency-panel-{{ tenant.id }}">
+                    <div class="detail-header">
+                        <h3 class="detail-title">{{ tenant.tenant_name }} さんの緊急連絡先</h3>
+                        <button type="button" class="detail-close" data-close-emergency-panel>閉じる</button>
+                    </div>
+                    <div class="detail-scroll">
+                        {% with contacts=tenant.emergency_contacts.all %}
+                            {% if contacts %}
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>緊急連絡先ID</th>
+                                            <th>入居者ID</th>
+                                            <th>緊急連絡先氏名</th>
+                                            <th>続柄</th>
+                                            <th>電話番号</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for contact in contacts %}
+                                            <tr>
+                                                <td>{{ contact.id }}</td>
+                                                <td>{{ tenant.id }}</td>
+                                                <td>{{ contact.contact_name|default:"未設定" }}</td>
+                                                <td>{{ contact.relationship|default:"未設定" }}</td>
+                                                <td>{{ contact.phone_number }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <p class="empty-message">緊急連絡先は未登録です。</p>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </section>
+            {% endfor %}
         {% else %}
             {% comment %}
             if文の条件に合わない場合、つまり入居者データが0件の場合はこちらを表示します。
@@ -132,5 +255,30 @@
             <p class="empty-message">登録済みの入居者はまだいません。</p>
         {% endif %}
     </main>
+    <script>
+        document.querySelectorAll("[data-emergency-panel]").forEach(function (button) {
+            button.addEventListener("click", function () {
+                const targetId = button.dataset.emergencyPanel;
+                document.querySelectorAll(".detail-panel").forEach(function (panel) {
+                    panel.classList.toggle("active", panel.id === targetId);
+                });
+                const targetPanel = document.getElementById(targetId);
+                if (targetPanel) {
+                    targetPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            });
+        });
+
+        document.querySelectorAll("[data-close-emergency-panel]").forEach(function (button) {
+            button.addEventListener("click", function () {
+                button.closest(".detail-panel").classList.remove("active");
+            });
+        });
+
+        // TODO: 緊急連絡先が複数登録されている場合の表示方法を後で改善する。
+        // TODO: 代表IDの決め方を後で検討する。
+        // TODO: 緊急連絡先IDクリックで専用詳細画面へ移動する導線を後で作る。
+        // TODO: 入居者ID、お知らせID、ログイン履歴IDも専用詳細画面へ移動できるようにする。
+    </script>
 </body>
 </html>

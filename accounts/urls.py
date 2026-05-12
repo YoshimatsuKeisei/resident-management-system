@@ -17,6 +17,12 @@ urlpatterns = [
     path("password-reset/", views.password_reset, name="password_reset"),
     # mypage/は、ログイン後に入居者が使うマイページ画面を表示するURLです。
     path("mypage/", views.mypage, name="mypage"),
+    path("mypage/settings/email/", views.update_email, name="update_email"),
+    path("mypage/settings/phone-numbers/", views.update_phone_numbers, name="update_phone_numbers"),
+    path("mypage/settings/password/", views.update_password_from_mypage, name="update_password_from_mypage"),
+    path("mypage/settings/contact-methods/", views.update_contact_methods, name="update_contact_methods"),
+    path("mypage/settings/callable-time/", views.update_callable_time, name="update_callable_time"),
+    path("mypage/settings/emergency-contacts/", views.update_emergency_contacts, name="update_emergency_contacts"),
     path("company/message/", views.company_message, name="company_message"),
     # management/tenants/は、管理者用の入居者一覧ページを表示するURLです。
     path("management/tenants/", views.tenant_list, name="tenant_list"),

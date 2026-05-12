@@ -1,14 +1,23 @@
 """accountsアプリで使う画面表示とフォーム処理を書きます。"""
 
+import json
 import re
-from datetime import date
+from datetime import date, time
 
 from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from .models import LoginHistory, LoginSession, TenantNotice, TenantProfile
+from .models import (
+    EmergencyContact,
+    LoginHistory,
+    LoginSession,
+    TenantNotice,
+    TenantPhoneNumber,
+    TenantProfile,
+)
 
 
 LOGIN_ERROR_MESSAGE = "メールアドレスまたは電話番号、パスワードが異なります。"
@@ -30,6 +39,34 @@ def is_email_or_phone(value):
 def is_alnum_password(value):
     """パスワードが半角英数字だけで入力されているかを確認します。"""
     return bool(re.fullmatch(r"[A-Za-z0-9]+", value))
+
+
+def is_phone_number(value):
+    return bool(re.fullmatch(r"^0\d{1,4}-?\d{1,4}-?\d{3,4}$", value))
+
+
+def get_logged_in_tenant(request):
+    tenant_id = request.session.get("tenant_id")
+    if tenant_id is None:
+        return None
+    return TenantProfile.objects.filter(id=tenant_id).first()
+
+
+def json_success(message, **extra):
+    data = {"success": True, "message": message}
+    data.update(extra)
+    return JsonResponse(data)
+
+
+def json_error(message):
+    return JsonResponse({"success": False, "message": message})
+
+
+def get_json_body(request):
+    try:
+        return json.loads(request.body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        return {}
 
 
 def top(request):
@@ -244,14 +281,211 @@ def mypage(request):
         }
         for notice in tenant_notices
     ]
+    phone_numbers = list(
+        tenant.phone_numbers.all().order_by("-is_primary", "created_at").values_list(
+            "phone_number",
+            flat=True,
+        )
+    )
+    if not phone_numbers and tenant.phone_number:
+        phone_numbers = [tenant.phone_number]
+    emergency_contacts = [
+        {
+            "contact_name": contact.contact_name,
+            "phone_number": contact.phone_number,
+            "relationship": contact.relationship,
+        }
+        for contact in tenant.emergency_contacts.all().order_by("created_at")
+    ]
 
     context = {
         "tenant": tenant,
         "login_histories": login_histories,
         "notices": notices,
+        "phone_numbers": phone_numbers,
+        "emergency_contacts": emergency_contacts,
+        "callable_start_hour": tenant.callable_start_time.hour if tenant.callable_start_time else "",
+        "callable_end_hour": tenant.callable_end_time.hour if tenant.callable_end_time else "",
     }
 
     return render(request, "accounts/mypage.html", context)
+
+
+def update_email(request):
+    tenant = get_logged_in_tenant(request)
+    if tenant is None:
+        return json_error("ログイン情報を確認できません。")
+
+    new_email = request.POST.get("new_email", "").strip()
+    if new_email == "":
+        return json_error("メールアドレスを入力してください。")
+    if not re.fullmatch(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", new_email):
+        return json_error("メールアドレスの形式が正しくありません。")
+    if TenantProfile.objects.exclude(id=tenant.id).filter(email=new_email).exists():
+        return json_error("このメールアドレスは使用できません。")
+
+    # TODO: メールアドレス変更時に確認メールを送る。
+    tenant.email = new_email
+    tenant.save(update_fields=["email", "updated_at"])
+    return json_success("メールアドレスを変更しました。", email=new_email)
+
+
+def update_phone_numbers(request):
+    tenant = get_logged_in_tenant(request)
+    if tenant is None:
+        return json_error("ログイン情報を確認できません。")
+
+    phone_numbers = [
+        str(value).strip()
+        for value in get_json_body(request).get("phone_numbers", [])
+        if str(value).strip() != ""
+    ]
+    if not phone_numbers:
+        return json_error("必ず1個以上電話番号を登録してください。")
+    if any(not is_phone_number(value) for value in phone_numbers):
+        return json_error("電話番号の形式が正しくありません。")
+    if len(phone_numbers) != len(set(phone_numbers)):
+        return json_error("同じ電話番号が入力されています。")
+
+    other_profile_exists = TenantProfile.objects.exclude(id=tenant.id).filter(
+        phone_number__in=phone_numbers
+    ).exists()
+    other_phone_exists = TenantPhoneNumber.objects.exclude(tenant=tenant).filter(
+        phone_number__in=phone_numbers
+    ).exists()
+    if other_profile_exists or other_phone_exists:
+        return json_error("この電話番号は使用できません。")
+
+    # TODO: 電話番号変更時にSMS認証を行う。
+    TenantPhoneNumber.objects.filter(tenant=tenant).delete()
+    for index, phone_number in enumerate(phone_numbers):
+        TenantPhoneNumber.objects.create(
+            tenant=tenant,
+            phone_number=phone_number,
+            is_primary=index == 0,
+        )
+    tenant.phone_number = phone_numbers[0]
+    tenant.save(update_fields=["phone_number", "updated_at"])
+    return json_success("電話番号を変更しました。", phone_numbers=phone_numbers)
+
+
+def update_password_from_mypage(request):
+    tenant = get_logged_in_tenant(request)
+    if tenant is None:
+        return json_error("ログイン情報を確認できません。")
+
+    current_password = request.POST.get("current_password", "")
+    new_password = request.POST.get("new_password", "")
+    new_password_confirm = request.POST.get("new_password_confirm", "")
+
+    if current_password == "" or new_password == "" or new_password_confirm == "":
+        return json_error("入力していない項目があります。")
+    if not check_password(current_password, tenant.password_hash):
+        return json_error("現在のパスワードが正しくありません。")
+    if not is_alnum_password(new_password):
+        return json_error("形式が違います。半角英数字のみの入力です。")
+    if new_password != new_password_confirm:
+        return json_error("パスワードが一致しません。")
+    if current_password == new_password:
+        return json_error("現在のパスワードと同じものは使用できません。")
+
+    tenant.password_hash = make_password(new_password)
+    tenant.save(update_fields=["password_hash", "updated_at"])
+    return json_success("パスワードを変更しました。")
+
+
+def update_contact_methods(request):
+    tenant = get_logged_in_tenant(request)
+    if tenant is None:
+        return json_error("ログイン情報を確認できません。")
+
+    data = get_json_body(request)
+    contact_by_phone = bool(data.get("contact_by_phone"))
+    contact_by_app = bool(data.get("contact_by_app"))
+    contact_by_email = bool(data.get("contact_by_email"))
+    contact_by_sms = bool(data.get("contact_by_sms"))
+
+    if not any([contact_by_phone, contact_by_app, contact_by_email, contact_by_sms]):
+        return json_error("少なくとも1つはオンにしてください。")
+
+    # TODO: 連絡設定変更履歴を保存する。
+    tenant.contact_by_phone = contact_by_phone
+    tenant.contact_by_app = contact_by_app
+    tenant.contact_by_email = contact_by_email
+    tenant.contact_by_sms = contact_by_sms
+    tenant.save(
+        update_fields=[
+            "contact_by_phone",
+            "contact_by_app",
+            "contact_by_email",
+            "contact_by_sms",
+            "updated_at",
+        ]
+    )
+    return json_success("希望連絡方法を変更しました。")
+
+
+def update_callable_time(request):
+    tenant = get_logged_in_tenant(request)
+    if tenant is None:
+        return json_error("ログイン情報を確認できません。")
+
+    start_value = request.POST.get("callable_start_time", "").strip()
+    end_value = request.POST.get("callable_end_time", "").strip()
+
+    if (start_value == "") != (end_value == ""):
+        return json_error("開始時間と終了時間を両方選択してください。")
+
+    if start_value == "" and end_value == "":
+        tenant.callable_start_time = None
+        tenant.callable_end_time = None
+    else:
+        try:
+            start_hour = int(start_value)
+            end_hour = int(end_value)
+            start_time = time(hour=start_hour)
+            end_time = time(hour=end_hour)
+        except ValueError:
+            return json_error("電話可能時間帯の形式が正しくありません。")
+        if end_time <= start_time:
+            return json_error("終了時間は開始時間より後にしてください。")
+        tenant.callable_start_time = start_time
+        tenant.callable_end_time = end_time
+
+    tenant.save(update_fields=["callable_start_time", "callable_end_time", "updated_at"])
+    return json_success(
+        "電話可能時間帯を変更しました。",
+        callable_start_time=start_value,
+        callable_end_time=end_value,
+    )
+
+
+def update_emergency_contacts(request):
+    tenant = get_logged_in_tenant(request)
+    if tenant is None:
+        return json_error("ログイン情報を確認できません。")
+
+    contacts = []
+    for raw_contact in get_json_body(request).get("emergency_contacts", []):
+        contact_name = str(raw_contact.get("contact_name", "")).strip()
+        phone_number = str(raw_contact.get("phone_number", "")).strip()
+        relationship = str(raw_contact.get("relationship", "")).strip()
+        if contact_name == "" and phone_number == "" and relationship == "":
+            continue
+        if phone_number == "" or not is_phone_number(phone_number):
+            return json_error("電話番号の形式が正しくありません。")
+        contacts.append(
+            {
+                "contact_name": contact_name,
+                "phone_number": phone_number,
+                "relationship": relationship,
+            }
+        )
+
+    EmergencyContact.objects.filter(tenant=tenant).delete()
+    for contact in contacts:
+        EmergencyContact.objects.create(tenant=tenant, **contact)
+    return json_success("緊急連絡先を変更しました。", emergency_contacts=contacts)
 
 
 def company_message(request):
@@ -328,7 +562,7 @@ def company_message(request):
 def tenant_list(request):
     """管理者用の入居者一覧ページを表示します。"""
     # DBに保存されている入居者データを、登録日時が新しい順に取得します。
-    tenants = TenantProfile.objects.all().order_by("-created_at")
+    tenants = TenantProfile.objects.prefetch_related("emergency_contacts").all().order_by("-created_at")
 
     # contextに入れたデータは、HTMLテンプレート側で使えるようになります。
     context = {
