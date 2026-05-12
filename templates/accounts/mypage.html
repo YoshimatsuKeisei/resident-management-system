@@ -1331,7 +1331,7 @@
         const dbNotices = dbNoticesElement ? JSON.parse(dbNoticesElement.textContent) : [];
         const dummyNotices = [
             {
-                id: 1,
+                id: "dummy-1",
                 title: "設備点検のお知らせ",
                 senderCompany: "管理会社",
                 dateTime: "2026-05-12 09:30",
@@ -1341,7 +1341,7 @@
                 isTrash: false
             },
             {
-                id: 2,
+                id: "dummy-2",
                 title: "契約更新時期のお知らせ",
                 senderCompany: "不動産会社",
                 dateTime: "2026-05-11 14:00",
@@ -1351,7 +1351,7 @@
                 isTrash: false
             },
             {
-                id: 3,
+                id: "dummy-3",
                 title: "家賃引き落とし予定のお知らせ",
                 senderCompany: "管理会社",
                 dateTime: "2026-05-10 10:15",
@@ -1361,7 +1361,7 @@
                 isTrash: false
             },
             {
-                id: 4,
+                id: "dummy-4",
                 title: "ゴミ出しルール変更のお知らせ",
                 senderCompany: "大家",
                 dateTime: "2026-05-09 18:20",
@@ -1371,7 +1371,7 @@
                 isTrash: false
             },
             {
-                id: 5,
+                id: "dummy-5",
                 title: "共用部清掃日のお知らせ",
                 senderCompany: "管理会社",
                 dateTime: "2026-05-08 08:45",
@@ -1381,7 +1381,7 @@
                 isTrash: false
             },
             {
-                id: 6,
+                id: "dummy-6",
                 title: "断水予定のお知らせ",
                 senderCompany: "管理会社",
                 dateTime: "2026-05-07 16:10",
@@ -1391,7 +1391,7 @@
                 isTrash: false
             },
             {
-                id: 7,
+                id: "dummy-7",
                 title: "保証会社からの確認依頼",
                 senderCompany: "保証会社",
                 dateTime: "2026-05-06 11:05",
@@ -1401,7 +1401,7 @@
                 isTrash: false
             },
             {
-                id: 8,
+                id: "dummy-8",
                 title: "大家からの注意喚起",
                 senderCompany: "大家",
                 dateTime: "2026-05-05 20:00",
@@ -1411,7 +1411,7 @@
                 isTrash: false
             },
             {
-                id: 9,
+                id: "dummy-9",
                 title: "駐輪場利用ルールの変更",
                 senderCompany: "不動産会社",
                 dateTime: "2026-05-04 13:40",
@@ -1421,7 +1421,7 @@
                 isTrash: false
             },
             {
-                id: 10,
+                id: "dummy-10",
                 title: "防災設備点検のお知らせ",
                 senderCompany: "管理会社",
                 dateTime: "2026-05-03 09:00",
@@ -1787,13 +1787,14 @@
         }
 
         function deleteSelectedTrashNotices() {
+            isTrashSelectMode = false;
             const checkedIds = Array.from(trashList.querySelectorAll(".trash-check:checked")).map(function (checkbox) {
-                return Number(checkbox.value);
+                return String(checkbox.value);
             });
 
             checkedIds.forEach(function (id) {
                 const notice = notices.find(function (item) {
-                    return item.id === id;
+                    return String(item.id) === id;
                 });
 
                 if (notice) {

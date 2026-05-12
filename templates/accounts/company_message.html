@@ -52,6 +52,10 @@
             font-weight: bold;
         }
 
+        .form-label[hidden] {
+            display: none;
+        }
+
         .form-label.full {
             grid-column: 1 / -1;
         }
@@ -192,6 +196,7 @@
         const dummyTargetWrap = document.getElementById("dummy-target-wrap");
         const dummyTargetSelect = document.getElementById("dummy-target-select");
         const tenantTargetWrap = document.getElementById("tenant-target-wrap");
+        const selectedTenant = document.getElementById("selected-tenant-id");
 
         const dummyOptions = {
             all: [["", "追加選択なし"]],
@@ -204,6 +209,10 @@
             const isPersonal = selectedType === "personal";
             tenantTargetWrap.hidden = !isPersonal;
             dummyTargetWrap.hidden = isPersonal;
+            selectedTenant.disabled = !isPersonal;
+            if (!isPersonal) {
+                selectedTenant.value = "";
+            }
             dummyTargetSelect.innerHTML = "";
 
             (dummyOptions[selectedType] || dummyOptions.all).forEach(function (option) {
