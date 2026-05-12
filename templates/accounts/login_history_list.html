@@ -20,6 +20,11 @@
         }
 
         .page-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
             margin-bottom: 24px;
         }
 
@@ -79,18 +84,44 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+
+        .log-legend {
+            max-width: 520px;
+            padding: 10px 12px;
+            border: 1px solid #d8dee6;
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: #4b5563;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .log-legend strong {
+            color: #1f2937;
+        }
     </style>
 </head>
 <body>
     <main class="page">
         <header class="page-header">
-            <h1 class="site-title">入居者管理システム</h1>
-            <h2 class="page-title">操作履歴一覧</h2>
+            <div>
+                <h1 class="site-title">入居者管理システム</h1>
+                <h2 class="page-title">操作履歴一覧</h2>
+            </div>
+            <div class="log-legend" aria-label="ログ種別の凡例">
+                <strong>凡例</strong>:
+                IN - ログイン / OUT - ログアウト / TEL - 電話番号 /
+                MAIL - メールアドレス / PASS - パスワード / EMG - 緊急連絡先
+            </div>
         </header>
 
         {% comment %}
         login_historiesには、views.pyでDBから取得したログイン履歴の一覧が入っています。
         データが1件以上ある場合はテーブルを表示します。
+        TODO: 将来的に操作履歴検索機能を追加する。
+        TODO: 操作履歴をログ種別で絞り込めるようにする。
+        TODO: 備考欄が長い場合は詳細画面で確認できるようにする。
+        TODO: SQLを使って滞納者、退去予定者、契約更新が近い入居者などを検索できるようにする。
         {% endcomment %}
         {% if login_histories %}
             <div class="table-area">
@@ -115,7 +146,7 @@
                                 <td>{{ history.login_session.id }}</td>
                                 <td>{{ history.tenant.id }}</td>
                                 <td>{{ history.occurred_at|date:"Y-m-d-H:i" }}</td>
-                                <td>{{ history.event_type }}（{{ history.get_event_type_display }}）</td>
+                                <td>{{ history.event_type }}</td>
                                 <td class="remarks-cell" title="{{ history.remarks|default:'-' }}">{{ history.remarks|default:"-" }}</td>
                             </tr>
                         {% endfor %}

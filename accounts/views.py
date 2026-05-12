@@ -356,7 +356,10 @@ def update_email(request):
         return json_error("このメールアドレスは使用できません。")
 
     # TODO: メールアドレス変更時に確認メールを送る。
-    old_email = tenant.email
+    old_email = tenant.email.strip()
+    if old_email == new_email:
+        return json_error("変更内容がありません。")
+
     tenant.email = new_email
     tenant.save(update_fields=["email", "updated_at"])
     create_tenant_log(request, tenant, LoginHistory.EVENT_TYPE_MAIL, f"{old_email}\u2192{new_email}")
@@ -397,7 +400,10 @@ def update_phone_numbers(request):
         )
     )
     if not old_phone_numbers and tenant.phone_number:
-        old_phone_numbers = [tenant.phone_number]
+        old_phone_numbers = [tenant.phone_number.strip()]
+    old_phone_numbers = [phone_number.strip() for phone_number in old_phone_numbers]
+    if old_phone_numbers == phone_numbers:
+        return json_error("変更内容がありません。")
 
     TenantPhoneNumber.objects.filter(tenant=tenant).delete()
     for index, phone_number in enumerate(phone_numbers):
@@ -434,7 +440,7 @@ def update_password_from_mypage(request):
         return json_error("形式が違います。半角英数字のみの入力です。")
     if new_password != new_password_confirm:
         return json_error("パスワードが一致しません。")
-    if current_password == new_password:
+    if check_password(new_password, tenant.password_hash):
         return json_error("現在のパスワードと同じものは使用できません。")
 
     tenant.password_hash = make_password(new_password)
@@ -456,6 +462,13 @@ def update_contact_methods(request):
 
     if not any([contact_by_phone, contact_by_app, contact_by_email, contact_by_sms]):
         return json_error("少なくとも1つはオンにしてください。")
+    if (
+        tenant.contact_by_phone == contact_by_phone
+        and tenant.contact_by_app == contact_by_app
+        and tenant.contact_by_email == contact_by_email
+        and tenant.contact_by_sms == contact_by_sms
+    ):
+        return json_error("変更内容がありません。")
 
     # TODO: 連絡設定変更履歴を保存する。
     tenant.contact_by_phone = contact_by_phone
@@ -486,8 +499,8 @@ def update_callable_time(request):
         return json_error("開始時間と終了時間を両方選択してください。")
 
     if start_value == "" and end_value == "":
-        tenant.callable_start_time = None
-        tenant.callable_end_time = None
+        start_time = None
+        end_time = None
     else:
         try:
             start_hour = int(start_value)
@@ -498,9 +511,12 @@ def update_callable_time(request):
             return json_error("電話可能時間帯の形式が正しくありません。")
         if end_time <= start_time:
             return json_error("終了時間は開始時間より後にしてください。")
-        tenant.callable_start_time = start_time
-        tenant.callable_end_time = end_time
 
+    if tenant.callable_start_time == start_time and tenant.callable_end_time == end_time:
+        return json_error("変更内容がありません。")
+
+    tenant.callable_start_time = start_time
+    tenant.callable_end_time = end_time
     tenant.save(update_fields=["callable_start_time", "callable_end_time", "updated_at"])
     return json_success(
         "電話可能時間帯を変更しました。",
@@ -533,12 +549,14 @@ def update_emergency_contacts(request):
 
     old_contacts = [
         {
-            "contact_name": contact.contact_name,
-            "phone_number": contact.phone_number,
-            "relationship": contact.relationship,
+            "contact_name": contact.contact_name.strip(),
+            "phone_number": contact.phone_number.strip(),
+            "relationship": contact.relationship.strip(),
         }
         for contact in EmergencyContact.objects.filter(tenant=tenant).order_by("created_at")
     ]
+    if old_contacts == contacts:
+        return json_error("変更内容がありません。")
 
     EmergencyContact.objects.filter(tenant=tenant).delete()
     for contact in contacts:
@@ -549,7 +567,7 @@ def update_emergency_contacts(request):
         LoginHistory.EVENT_TYPE_EMERGENCY,
         f"{format_emergency_contacts_for_log(old_contacts)}\u2192{format_emergency_contacts_for_log(contacts)}",
     )
-    # TODO: ???????????????????????????????
+    # TODO: 緊急連絡先の変更差分をより見やすく表示する専用詳細画面を作る。
     return json_success("緊急連絡先を変更しました。", emergency_contacts=contacts)
 
 
